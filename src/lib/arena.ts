@@ -1,0 +1,74 @@
+import type { ContestRecord, ProblemLevel, ProblemTopic } from "@/lib/types";
+
+export interface AnswerState {
+  ok: boolean;
+  correct?: boolean;
+  message?: string;
+}
+
+export const INITIAL_ANSWER_STATE: AnswerState = { ok: false };
+
+export interface PuzzleState {
+  ok: boolean;
+  correct?: boolean;
+  message?: string;
+}
+
+export const INITIAL_PUZZLE_STATE: PuzzleState = { ok: false };
+
+export const PROBLEM_TOPICS: {
+  value: ProblemTopic;
+  bn: string;
+  en: string;
+  tint: string;
+}[] = [
+  { value: "NUMBER_THEORY", bn: "সংখ্যাতত্ত্ব", en: "Number Theory", tint: "#FF781E" },
+  { value: "GEOMETRY", bn: "জ্যামিতি", en: "Geometry", tint: "#1B4594" },
+  { value: "COMBINATORICS", bn: "সমাবেশ", en: "Combinatorics", tint: "#7952B3" },
+  { value: "ALGEBRA", bn: "বীজগণিত", en: "Algebra", tint: "#0EA5A5" },
+  { value: "PROOFS", bn: "প্রমাণ", en: "Proofs", tint: "#ED1C24" },
+];
+
+export const PROBLEM_LEVELS: { value: ProblemLevel; bn: string; en: string }[] = [
+  { value: "PRIMARY", bn: "প্রাথমিক", en: "Primary" },
+  { value: "JUNIOR", bn: "জুনিয়র", en: "Junior" },
+  { value: "SECONDARY", bn: "সেকেন্ডারি", en: "Secondary" },
+  { value: "HIGHER_SECONDARY", bn: "উচ্চ মাধ্যমিক", en: "Higher Secondary" },
+  { value: "BDMO_REGIONAL", bn: "BdMO আঞ্চলিক", en: "BdMO Regional" },
+  { value: "BDMO_NATIONAL", bn: "BdMO জাতীয়", en: "BdMO National" },
+  { value: "IMO", bn: "IMO", en: "IMO" },
+];
+
+export function topicMeta(topic: ProblemTopic) {
+  return PROBLEM_TOPICS.find((t) => t.value === topic) ?? PROBLEM_TOPICS[0];
+}
+
+export function levelLabel(level: ProblemLevel) {
+  return PROBLEM_LEVELS.find((l) => l.value === level) ?? PROBLEM_LEVELS[1];
+}
+
+export function difficultyLabel(n: number) {
+  const labels = ["", "সহজ", "মধ্যম", "কঠিন", "খুব কঠিন", "অলিম্পিয়াড"];
+  return labels[Math.max(0, Math.min(5, Math.round(n)))] ?? "";
+}
+
+export type ContestPhase = "upcoming" | "live" | "ended";
+
+export function contestPhase(contest: ContestRecord, now: number = Date.now()): ContestPhase {
+  const start = Date.parse(contest.startAt);
+  const end = Date.parse(contest.endAt);
+  if (now < start) return "upcoming";
+  if (now > end) return "ended";
+  return "live";
+}
+
+/** Per-participant deadline: capped by contest end and the contest duration. */
+export function deadlineFor(contest: ContestRecord, startedAtIso: string): number {
+  const end = Date.parse(contest.endAt);
+  const started = Date.parse(startedAtIso);
+  return Math.min(end, started + contest.durationMin * 60_000);
+}
+
+export function maxContestScore(problemPoints: number[]): number {
+  return problemPoints.reduce((sum, p) => sum + p, 0);
+}

@@ -1,0 +1,334 @@
+// Prothom Alo Gonit Ishkul — Production data model (PostgreSQL target).
+// Local development runs against the JSON-backed repository in src/lib/repositories
+// so the app boots without a running database. Switch DATA_SOURCE=prisma to use this.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  MENTOR
+  AMBASSADOR
+  STUDENT
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW
+  ACCEPTED
+  REJECTED
+}
+
+enum ActivityType {
+  CAMPUS_CIRCLE
+  WORKSHOP
+  SOCIAL_MEDIA
+  SCHOOL_VISIT
+  CONTEST_HOSTED
+  ARTICLE_PUBLISHED
+}
+
+enum ActivityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PointSource {
+  ACTIVITY
+  CONTEST_SOLVE
+  ARTICLE_PUBLISHED
+  BONUS
+  ADJUSTMENT
+}
+
+enum CourseLevel {
+  PRIMARY
+  JUNIOR
+  SECONDARY
+  HIGHER_SECONDARY
+  BDMO_PREP
+}
+
+enum CourseCategory {
+  TRIVIA
+  SOLUTIONS
+  MO_TRAINING
+  ARTICLE_WRITING
+}
+
+enum ArticleAudience {
+  PUBLIC
+  AMBASSADOR
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+model User {
+  id             String              @id @default(cuid())
+  name           String
+  email          String              @unique
+  passwordHash   String?
+  image          String?
+  role           Role                @default(STUDENT)
+  emailVerified  DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  application    AmbassadorApplication?
+  ambassador     AmbassadorProfile?
+  activityReport ActivityReport[]
+  pointEntries   PointEntry[]
+  enrollments    Enrollment[]
+  lectureProgress LectureProgress[]
+  articles       Article[]
+}
+
+model AmbassadorApplication {
+  id            String            @id @default(cuid())
+  trackingCode  String            @unique
+  fullName      String
+  email         String            @unique
+  phone         String
+  university    String
+  department    String
+  district      String
+  division      String
+  studentId     String?
+  statement     String
+  resumeUrl     String?
+  shareUrl      String?
+  status        ApplicationStatus @default(SUBMITTED)
+  reviewerNote  String?
+  timeline      ApplicationTimeline[]
+  userId        String?           @unique
+  user          User?             @relation(fields: [userId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model ApplicationTimeline {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   AmbassadorApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus
+  note          String?
+  createdAt     DateTime    @default(now())
+}
+
+model AmbassadorProfile {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id])
+  district      String
+  division      String
+  university    String
+  season        String      @default("Season 1")
+  points        Int         @default(0)
+  approvedActs  Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model ActivityReport {
+  id           String         @id @default(cuid())
+  ambassadorId String
+  ambassador   User           @relation(fields: [ambassadorId], references: [id])
+  type         ActivityType
+  title        String
+  description  String
+  district     String
+  participants Int            @default(0)
+  proofUrl     String?
+  points       Int            @default(0)
+  status       ActivityStatus @default(PENDING)
+  reviewNote   String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model PointEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  source    PointSource
+  points    Int
+  reason    String
+  createdAt DateTime    @default(now())
+}
+
+model ResourceItem {
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  description String
+  fileUrl     String
+  fileType    String
+  fileSizeKb  Int      @default(0)
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+// ── Phase 2 (learning platform) + later-phase models ──
+
+model Course {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  titleBn     String
+  level       CourseLevel
+  category    CourseCategory @default(TRIVIA)
+  description String
+  instructor  String
+  published   Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  lectures    Lecture[]
+  enrollments Enrollment[]
+}
+
+model Lecture {
+  id          String            @id @default(cuid())
+  courseId    String
+  course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order       Int
+  title       String
+  titleBn     String
+  videoUrl    String
+  poster      String?
+  durationSec Int               @default(0)
+  chapters    LectureChapter[]
+  quiz        Quiz?
+  attachments LectureAttachment[]
+  progress    LectureProgress[]
+
+  @@unique([courseId, order])
+}
+
+model LectureChapter {
+  id        String  @id @default(cuid())
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  order     Int
+  label     String
+  labelBn   String
+  atSec     Int     @default(0)
+}
+
+model LectureAttachment {
+  id        String  @id @default(cuid())
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  title     String
+  titleBn   String
+  type      String
+  fileUrl   String
+  sizeKb    Int     @default(0)
+}
+
+model Quiz {
+  id          String         @id @default(cuid())
+  lectureId   String         @unique
+  lecture     Lecture        @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  passPercent Int            @default(60)
+  questions   QuizQuestion[]
+}
+
+model QuizQuestion {
+  id          String   @id @default(cuid())
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  order       Int
+  prompt      String
+  promptBn    String
+  options     Json
+  answerIndex Int
+  explanation String?
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model LectureProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lectureId  String
+  lecture    Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  watchedSec Int      @default(0)
+  completed  Boolean  @default(false)
+  quizPassed Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, lectureId])
+}
+
+model Problem {
+  id         String   @id @default(cuid())
+  title      String
+  body       String
+  topic      String
+  level      String
+  answer     String?
+  difficulty Int      @default(2)
+  createdAt  DateTime @default(now())
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  problemId String
+  userId    String
+  content   String
+  isProof   Boolean  @default(false)
+  isCorrect Boolean?
+  createdAt DateTime @default(now())
+}
+
+model Bulletins {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Article {
+  id           String          @id @default(cuid())
+  slug         String          @unique
+  title        String
+  summary      String
+  body         String
+  category     CourseCategory  @default(TRIVIA)
+  audience     ArticleAudience @default(PUBLIC)
+  tags         String[]
+  coverUrl     String?
+  authorId     String
+  author       User            @relation(fields: [authorId], references: [id])
+  status       ArticleStatus   @default(PENDING)
+  reviewerNote String?
+  views        Int             @default(0)
+  publishedAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
