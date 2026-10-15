@@ -28,6 +28,8 @@ import type {
   ProblemLevel,
   ProblemKind,
   SubmissionVerdict,
+  ClubRecord,
+  ClubEntryRecord,
 } from "./types";
 
 export interface StoreShape {
@@ -50,6 +52,8 @@ export interface StoreShape {
   puzzleSubmissions: PuzzleSubmissionRecord[];
   ratings: RatingRecord[];
   articles: ArticleRecord[];
+  clubs: ClubRecord[];
+  clubEntries: ClubEntryRecord[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -75,6 +79,8 @@ const COLLECTIONS: (keyof StoreShape)[] = [
   "puzzleSubmissions",
   "ratings",
   "articles",
+  "clubs",
+  "clubEntries",
 ];
 
 const emptyStore = (): StoreShape => ({
@@ -97,6 +103,8 @@ const emptyStore = (): StoreShape => ({
   puzzleSubmissions: [],
   ratings: [],
   articles: [],
+  clubs: [],
+  clubEntries: [],
 });
 
 export function loadStore(): StoreShape {
@@ -125,6 +133,7 @@ export function getStore(): StoreShape {
     cache = loadStore();
     void seedIfEmpty(cache);
     void seedArticlesIfEmpty(cache);
+    void seedClubsIfEmpty(cache);
   }
   return cache;
 }
@@ -1109,6 +1118,243 @@ function seedArticlesIfEmpty(store: StoreShape) {
     store.articles.push({
       ...article,
       id: `art_${article.slug}`,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+}
+
+function seedClubsIfEmpty(store: StoreShape) {
+  if (store.clubs.length > 0) return;
+  const now = new Date().toISOString();
+  const day = 86_400_000;
+  const at = (ms: number) => new Date(Date.parse(now) + ms).toISOString();
+
+  // Representative logins (names kept within the curated demo cast).
+  const reps: { id: string; name: string; email: string }[] = [
+    { id: "usr_club_dhaka", name: "Tawhid", email: "dumath@gonitishkul.local" },
+    { id: "usr_club_ndc", name: "Samin", email: "ndcmath@gonitishkul.local" },
+    { id: "usr_club_rc", name: "Siratim", email: "rcmath@gonitishkul.local" },
+  ];
+  for (const rep of reps) {
+    if (store.users.some((u) => u.email === rep.email)) continue;
+    store.users.push({
+      id: rep.id,
+      name: rep.name,
+      email: rep.email,
+      passwordHash: bcrypt.hashSync("Club@12345", 10),
+      role: "CLUB",
+      createdAt: now,
+    });
+  }
+
+  const clubs: ClubRecord[] = [
+    {
+      id: "club_du",
+      slug: "dhaka-university-math-club",
+      name: "Dhaka University Math Club",
+      nameBn: "ঢাকা বিশ্ববিদ্যালয় গণিত ক্লাব",
+      logoUrl: "/brand/logo.png",
+      about:
+        "ঢাকা বিশ্ববিদ্যালয়ের শিক্ষার্থীদের গণিতচর্চার প্রাণকেন্দ্র। সাপ্তাহিক সমস্যা সেশন, অলিম্পিয়াড কর্মশালা ও ক্যাম্পাস গণিত উৎসব আয়োজন করে।",
+      aboutEn:
+        "A hub for mathematical practice at the University of Dhaka — weekly problem sessions, olympiad workshops and campus math festivals.",
+      district: "Dhaka",
+      institution: "University of Dhaka",
+      foundedYear: 2016,
+      facebook: "https://www.facebook.com/PA.GonitIshkul/",
+      contactEmail: "dumath@gonitishkul.local",
+      representativeUserId: "usr_club_dhaka",
+      representativeName: "Tawhid",
+      status: "APPROVED",
+      published: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "club_ndc",
+      slug: "notre-dame-math-club",
+      name: "Notre Dame Math Club",
+      nameBn: "নটর ডেম গণিত ক্লাব",
+      logoUrl: "/brand/logo.png",
+      about:
+        "স্কুল শিক্ষার্থীদের জন্য গণিত অলিম্পিয়াড প্রস্তুতি ও মজার গণিত কর্মশালার একটি সক্রিয় ক্লাব।",
+      aboutEn:
+        "An active club preparing school students for math olympiads through fun, hands-on workshops.",
+      district: "Dhaka",
+      institution: "Notre Dame College",
+      foundedYear: 2014,
+      contactEmail: "ndcmath@gonitishkul.local",
+      representativeUserId: "usr_club_ndc",
+      representativeName: "Samin",
+      status: "APPROVED",
+      published: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "club_rc",
+      slug: "rajshahi-college-math-society",
+      name: "Rajshahi College Math Society",
+      nameBn: "রাজশাহী কলেজ গণিত সোসাইটি",
+      about:
+        "উত্তরবঙ্গের শিক্ষার্থীদের মধ্যে গণিতের সংস্কৃতি ছড়িয়ে দিতে কাজ করা একটি নতুন ক্লাব।",
+      aboutEn:
+        "A newly founded society spreading mathematical culture among students in northern Bangladesh.",
+      district: "Rajshahi",
+      institution: "Rajshahi College",
+      foundedYear: 2021,
+      contactEmail: "rcmath@gonitishkul.local",
+      representativeUserId: "usr_club_rc",
+      representativeName: "Siratim",
+      status: "PENDING",
+      published: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  store.clubs.push(...clubs);
+
+  const entrySeed: Omit<ClubEntryRecord, "id" | "createdAt" | "updatedAt">[] = [
+    {
+      clubId: "club_du",
+      type: "PROBLEM",
+      title: "প্রমাণ করো: √2 অমূলদ",
+      summary: "ক্লাসিক অমূলদতার প্রমাণ — শিক্ষানবিশদের জন্য আদর্শ।",
+      body: "ধরো $\\sqrt{2} = p/q$ যেখানে $p, q$ সহমৌলিক। তবে $p^2 = 2q^2$, ফলে $p$ জোড় — বিরোধ।",
+      topic: "PROOFS",
+      level: "SECONDARY",
+      difficulty: 2,
+      answer: "√2 অমূলদ",
+      tags: ["number theory", "proof"],
+      status: "APPROVED",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+      approvedAt: at(-5 * day),
+    },
+    {
+      clubId: "club_du",
+      type: "NOTE",
+      title: "মডুলার পাটিগণিতের নোট",
+      summary: "ভাগশেষ, সহসমতা ও ছোট ফার্মার উপপাদ্যের সংক্ষিপ্ত নোট।",
+      body: "সহসমতা $a \\equiv b \\pmod{n}$ মানে $n \\mid (a-b)$। ফার্মা: $a^{p-1} \\equiv 1 \\pmod{p}$।",
+      tags: ["number theory", "modulo"],
+      status: "APPROVED",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+      approvedAt: at(-4 * day),
+    },
+    {
+      clubId: "club_du",
+      type: "ARTICLE",
+      title: "কেন গণিত সার্কেল গুরুত্বপূর্ণ",
+      summary: "নিয়মিত সমস্যা সমাধান সেশন কীভাবে শিক্ষার্থীদের গড়ে তোলে।",
+      body:
+        "একটি গণিত সার্কেল কেবল সমস্যা সমাধান নয় — এটি প্রশ্ন করার, ভুল করা ও আবার চেষ্টা করার নিরাপদ জায়গা। " +
+        "ধারাবাহিক চর্চাই অলিম্পিয়াড সাফল্যের মূল চাবিকাঠি।",
+      tags: ["community", "education"],
+      status: "APPROVED",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+      approvedAt: at(-3 * day),
+    },
+    {
+      clubId: "club_du",
+      type: "EVENT",
+      title: "ক্যাম্পাস গণিত উৎসব ২০২৬",
+      summary: "দিনব্যাপী সমস্যা সমাধান প্রতিযোগিতা ও কর্মশালা।",
+      body: "সকাল ৯টা থেকে বিকেল ৫টা — জুনিয়র, সেকেন্ডারি ও উচ্চমাধ্যমিক বিভাগে তিনটি পৃথক প্রতিযোগিতা।",
+      eventDate: at(14 * day),
+      location: "University of Dhaka, Curzon Hall",
+      tags: ["festival", "contest"],
+      status: "APPROVED",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+      approvedAt: at(-2 * day),
+    },
+    {
+      clubId: "club_du",
+      type: "NOTE",
+      title: "সাপ্তাহিক অনুশীলন সেট (অনুমোদন অপেক্ষমাণ)",
+      summary: "এই সপ্তাহের অনুশীলন সমস্যার সেট — পর্যালোচনার অপেক্ষায়।",
+      body: "১. $2^n + 1$ কতগুলো মৌলিক হবে? ২. একটি ত্রিভুজের মধ্যমা সংক্রান্ত অসমতা প্রমাণ করো।",
+      tags: ["practice"],
+      status: "PENDING",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+    },
+    {
+      clubId: "club_du",
+      type: "ARTICLE",
+      title: "গণিত ইশকুল প্রতিবেদন (বাতিল)",
+      summary: "দুঃখিত, এই লেখাটি মানসম্মত নয়।",
+      body: "দ্রুত অসম্পূর্ণ খসড়া।",
+      tags: ["draft"],
+      status: "REJECTED",
+      reviewerNote: "লেখাটি অসম্পূর্ণ — মূল বক্তব্য যোগ করে আবার জমা দাও।",
+      submittedById: "usr_club_dhaka",
+      submittedByName: "Tawhid",
+    },
+    {
+      clubId: "club_ndc",
+      type: "PROBLEM",
+      title: "হ্যান্ডশেক সমস্যা",
+      summary: "সমাবেশের সহজ প্রয়োগ।",
+      body: "$10$ জনের দলে প্রত্যেকে প্রত্যেকের সাথে একবার করমর্দন করলে মোট কতটি করমর্দন?",
+      topic: "COMBINATORICS",
+      level: "JUNIOR",
+      difficulty: 1,
+      answer: "45",
+      tags: ["combinatorics"],
+      status: "APPROVED",
+      submittedById: "usr_club_ndc",
+      submittedByName: "Samin",
+      approvedAt: at(-3 * day),
+    },
+    {
+      clubId: "club_ndc",
+      type: "EVENT",
+      title: "স্কুল গণিত কর্মশালা",
+      summary: "নটর ডেম প্রাঙ্গণে দিনব্যাপী কর্মশালা।",
+      body: "শ্রেণি ৬-১০ এর শিক্ষার্থীদের জন্য হাতে-কলমে জ্যামিতি ও সংখ্যাতত্ত্ব কর্মশালা।",
+      eventDate: at(7 * day),
+      location: "Notre Dame College, Dhaka",
+      tags: ["workshop"],
+      status: "APPROVED",
+      submittedById: "usr_club_ndc",
+      submittedByName: "Samin",
+      approvedAt: at(-1 * day),
+    },
+    {
+      clubId: "club_ndc",
+      type: "ARTICLE",
+      title: "অলিম্পিয়াড প্রস্তুতির রুটিন",
+      summary: "ছোট শিক্ষার্থীদের জন্য সাপ্তাহিক প্রস্তুতি রুটিন।",
+      body: "প্রতিদিন ৩০ মিনিট সমস্যা, সপ্তাহে একদিন পূর্ণ পরীক্ষা, মাসে একটি প্রতিযোগিতা — এভাবেই এগিয়ে চলো।",
+      tags: ["prep", "routine"],
+      status: "PENDING",
+      submittedById: "usr_club_ndc",
+      submittedByName: "Samin",
+    },
+    {
+      clubId: "club_rc",
+      type: "EVENT",
+      title: "রাজশাহী গণিত সভা (ক্লাব অনুমোদনের অপেক্ষায়)",
+      summary: "প্রথম সভার পরিকল্পনা।",
+      body: "নতুন সদস্য আহ্বান ও অলিম্পিয়াড দল গঠনের প্রাথমিক আলোচনা।",
+      eventDate: at(21 * day),
+      location: "Rajshahi College",
+      tags: ["meetup"],
+      status: "PENDING",
+      submittedById: "usr_club_rc",
+      submittedByName: "Siratim",
+    },
+  ];
+
+  for (const entry of entrySeed) {
+    store.clubEntries.push({
+      ...entry,
+      id: `cle_${store.clubEntries.length + 1}_${entry.clubId}`,
       createdAt: now,
       updatedAt: now,
     });

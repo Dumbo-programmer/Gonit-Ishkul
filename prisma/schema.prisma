@@ -16,7 +16,28 @@ enum Role {
   INSTRUCTOR
   MENTOR
   AMBASSADOR
+  CLUB
   STUDENT
+}
+
+enum ClubStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ClubEntryType {
+  PROBLEM
+  NOTE
+  ARTICLE
+  EVENT
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ApplicationStatus {
@@ -95,6 +116,8 @@ model User {
   enrollments    Enrollment[]
   lectureProgress LectureProgress[]
   articles       Article[]
+  clubs          Club[]
+  clubEntries    ClubEntry[]
 }
 
 model AmbassadorApplication {
@@ -331,4 +354,59 @@ model Article {
   publishedAt  DateTime?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
+}
+
+// ── Phase 5 (partner clubs + moderation) ──
+
+model Club {
+  id                   String        @id @default(cuid())
+  slug                 String        @unique
+  name                 String
+  nameBn               String
+  logoUrl              String?
+  about                String
+  aboutEn              String?
+  district             String
+  institution          String
+  foundedYear          Int?
+  website              String?
+  facebook             String?
+  contactEmail         String
+  contactPhone         String?
+  representativeUserId String?
+  representative       User?         @relation(fields: [representativeUserId], references: [id])
+  representativeName   String?
+  status               ClubStatus    @default(PENDING)
+  published            Boolean       @default(false)
+  reviewerNote         String?
+  entries              ClubEntry[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+}
+
+model ClubEntry {
+  id              String            @id @default(cuid())
+  clubId          String
+  club            Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  type            ClubEntryType
+  title           String
+  summary         String?
+  body            String
+  topic           String?
+  level           String?
+  difficulty      Int?
+  answer          String?
+  eventDate       DateTime?
+  location        String?
+  linkUrl         String?
+  imageUrl        String?
+  tags            String[]
+  status          ModerationStatus  @default(PENDING)
+  reviewerNote    String?
+  submittedById   String
+  submittedBy     User              @relation(fields: [submittedById], references: [id])
+  submittedByName String
+  approvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }

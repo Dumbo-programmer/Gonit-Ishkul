@@ -11,6 +11,7 @@ import type { Role } from "@/lib/types";
 const ASSIGNABLE_ROLES: Role[] = [
   "STUDENT",
   "AMBASSADOR",
+  "CLUB",
   "MENTOR",
   "INSTRUCTOR",
   "ADMIN",

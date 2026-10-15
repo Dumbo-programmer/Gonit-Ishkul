@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { CheckCircle2, PlusCircle } from "lucide-react";
-import { submitActivityReport, INITIAL_FORM_STATE } from "@/app/gonit-doot/actions";
+import { submitActivityReport } from "@/app/gonit-doot/actions";
+import { INITIAL_FORM_STATE } from "@/lib/ambassadorForm";
 import { useLang } from "@/lib/i18n/LangContext";
 import { DISTRICTS } from "@/lib/districts";
 import type { ActivityType } from "@/lib/types";

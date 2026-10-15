@@ -3,6 +3,7 @@ export type Role =
   | "INSTRUCTOR"
   | "MENTOR"
   | "AMBASSADOR"
+  | "CLUB"
   | "STUDENT";
 
 export type ApplicationStatus =
@@ -344,4 +345,62 @@ export interface ArticleRecord {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+}
+
+// ─── Phase 5: Partner Clubs & Moderation ────────────────────────────────────
+
+export type ClubStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+
+/** What a partner club can contribute: problems, notes, articles or events. */
+export type ClubEntryType = "PROBLEM" | "NOTE" | "ARTICLE" | "EVENT";
+
+export type ModerationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface ClubRecord {
+  id: string;
+  slug: string;
+  name: string;
+  nameBn: string;
+  logoUrl?: string;
+  about: string;
+  aboutEn?: string;
+  district: string;
+  institution: string;
+  foundedYear?: number;
+  website?: string;
+  facebook?: string;
+  contactEmail: string;
+  contactPhone?: string;
+  representativeUserId?: string | null;
+  representativeName?: string;
+  status: ClubStatus;
+  published: boolean;
+  reviewerNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClubEntryRecord {
+  id: string;
+  clubId: string;
+  type: ClubEntryType;
+  title: string;
+  summary?: string;
+  body: string;
+  topic?: ProblemTopic;
+  level?: ProblemLevel;
+  difficulty?: number;
+  answer?: string;
+  eventDate?: string;
+  location?: string;
+  linkUrl?: string;
+  imageUrl?: string;
+  tags: string[];
+  status: ModerationStatus;
+  reviewerNote?: string;
+  submittedById: string;
+  submittedByName: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
 }

@@ -9,6 +9,7 @@ export const translations = {
     contests: { bn: "কনটেস্ট", en: "Contests" },
     resources: { bn: "রিসোর্স", en: "Resources" },
     articles: { bn: "আর্টিকেল", en: "Articles" },
+    clubs: { bn: "গণিত ক্লাব", en: "Math Clubs" },
     account: { bn: "আমার অ্যাকাউন্ট", en: "My Account" },
     admin: { bn: "অ্যাডমিন", en: "Admin" },
     events: { bn: "ইভেন্ট", en: "Events" },

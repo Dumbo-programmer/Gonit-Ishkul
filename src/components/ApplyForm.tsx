@@ -3,10 +3,8 @@
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import {
-  submitApplication,
-  INITIAL_FORM_STATE,
-} from "@/app/gonit-doot/actions";
+import { submitApplication } from "@/app/gonit-doot/actions";
+import { INITIAL_FORM_STATE } from "@/lib/ambassadorForm";
 import { useLang } from "@/lib/i18n/LangContext";
 import { DISTRICTS, DIVISIONS, DISTRICT_BY_EN } from "@/lib/districts";
 import { useState } from "react";

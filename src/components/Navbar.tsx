@@ -22,6 +22,7 @@ export function SiteNavbar() {
     { href: "/courses", key: "common.courses" },
     { href: "/problems", key: "common.problems" },
     { href: "/contests", key: "common.contests" },
+    { href: "/clubs", key: "common.clubs" },
     { href: "/articles", key: "common.articles" },
     { href: "/resources", key: "common.resources" },
   ];
@@ -121,7 +122,7 @@ export function SiteNavbar() {
       <div
         className={cn(
           "overflow-hidden border-t border-brand-lavender/20 bg-white lg:hidden",
-          open ? "max-h-[28rem]" : "max-h-0",
+          open ? "max-h-[34rem]" : "max-h-0",
           "transition-all duration-300",
         )}
       >

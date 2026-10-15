@@ -13,6 +13,9 @@ export type Permission =
   | "articles.submit"
   | "articles.review"
   | "ambassadors.manage"
+  | "club.register"
+  | "club.manage"
+  | "clubs.review"
   | "metrics.view"
   | "admin.all";
 
@@ -24,12 +27,18 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "ambassador.viewStatus",
     "ambassador.viewLeaderboard",
     "articles.submit",
+    "club.register",
   ],
   AMBASSADOR: [
     "ambassador.viewStatus",
     "ambassador.reportActivity",
     "ambassador.downloadKit",
     "ambassador.viewLeaderboard",
+    "articles.submit",
+    "club.register",
+  ],
+  CLUB: [
+    "club.manage",
     "articles.submit",
   ],
   MENTOR: [
@@ -42,6 +51,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "contests.grade",
     "articles.submit",
     "articles.review",
+    "clubs.review",
     "metrics.view",
   ],
   INSTRUCTOR: [
@@ -50,6 +60,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "courses.manage",
     "articles.submit",
     "articles.review",
+    "clubs.review",
   ],
   ADMIN: ["admin.all"],
 };
@@ -70,5 +81,6 @@ export const ROLE_LABELS: Record<Role, { bn: string; en: string }> = {
   INSTRUCTOR: { bn: "কোর্স ইন্সট্রাক্টর", en: "Instructor" },
   MENTOR: { bn: "মেন্টর / মূল্যায়নকারী", en: "Mentor" },
   AMBASSADOR: { bn: "গণিত দূত", en: "Ambassador" },
+  CLUB: { bn: "ক্লাব প্রতিনিধি", en: "Club Representative" },
   STUDENT: { bn: "শিক্ষার্থী", en: "Student" },
 };

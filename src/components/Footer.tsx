@@ -49,6 +49,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/clubs" className="hover:text-brand-orange">
+                {t("common.clubs")}
+              </Link>
+            </li>
+            <li>
               <Link href="/contests" className="hover:text-brand-orange">
                 {t("common.contests")}
               </Link>

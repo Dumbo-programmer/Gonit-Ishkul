@@ -13,15 +13,7 @@ import {
 } from "@/lib/repositories/ambassador";
 import { findUserByEmail, createUser } from "@/lib/repositories/users";
 import type { ActivityType } from "@/lib/types";
-
-export interface FormState {
-  ok: boolean;
-  message?: string;
-  trackingCode?: string;
-  errors?: Record<string, string>;
-}
-
-export const INITIAL_FORM_STATE: FormState = { ok: false };
+import type { FormState } from "@/lib/ambassadorForm";
 
 const applicationSchema = z.object({
   fullName: z.string().trim().min(3, "নাম অন্তত ৩ অক্ষরের হতে হবে"),

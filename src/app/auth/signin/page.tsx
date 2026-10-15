@@ -104,6 +104,7 @@ export default function SignInPage() {
               <li>admin@gonitishkul.local / Admin@12345</li>
               <li>mentor@gonitishkul.local / Mentor@12345</li>
               <li>sakib@example.com / Doot@12345</li>
+              <li>dumath@gonitishkul.local / Club@12345</li>
             </ul>
           </div>
         </div>
