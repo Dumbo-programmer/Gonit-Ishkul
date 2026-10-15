@@ -81,29 +81,38 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-brand-gradient text-white">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#0e1730] via-[#0a0f1f] to-[#06090f] text-white">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute inset-0 math-bg opacity-25 motion-safe:animate-float-slow" />
-        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-brand-orange/30 blur-3xl" />
-        <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-brand-lavender/30 blur-3xl" />
-        <div className="absolute bottom-[-6rem] right-1/4 h-72 w-72 rounded-full bg-brand-blue/50 blur-3xl" />
+        <div className="absolute inset-0 math-bg opacity-20 motion-safe:animate-float-slow" />
+        <div className="absolute inset-0 grid-overlay opacity-[0.1]" />
+        <div className="absolute inset-0 bg-mesh opacity-30 motion-safe:animate-pulse-glow" />
+        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-brand-orange/25 blur-3xl motion-safe:animate-blob" />
+        <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-brand-purple/30 blur-3xl motion-safe:animate-blob" />
+        <div className="absolute bottom-[-6rem] right-1/4 h-72 w-72 rounded-full bg-brand-blue/40 blur-3xl motion-safe:animate-blob" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.06] to-transparent" />
       </div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-12 pt-16 md:grid-cols-[1.05fr_0.95fr] md:pb-16 md:pt-24">
         <div className="animate-fade-up">
-          <span className="badge bg-white/15 text-white ring-1 ring-white/30 backdrop-blur">
+          <span className="badge bg-white/10 text-white ring-1 ring-white/20 backdrop-blur">
             <GraduationCap className="h-4 w-4" />
             {t("hero.badge")}
           </span>
 
-          <h1 className="mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-6xl lg:text-7xl">
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-brand-orange via-[#FFB27A] to-brand-orange bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,120,30,0.35)]">
-                গণিত
+          <h1 className="mt-5 font-display font-extrabold tracking-tight text-balance">
+            <span className="flex items-center gap-2.5 text-sm font-bold tracking-[0.2em] text-white/70 sm:text-base">
+              <span className="h-px w-8 bg-gradient-to-r from-brand-orange to-transparent" />
+              প্রথম আলো
+            </span>
+            <span className="mt-3 block text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+              <span className="relative inline-block">
+                <span className="animate-gradient-pan bg-gradient-to-r from-brand-orange via-[#FFB27A] to-brand-orange bg-[length:300%_100%] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,120,30,0.45)] motion-reduce:animate-none">
+                  গণিত
+                </span>
+              </span>{" "}
+              <span className="text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]">
+                ইশকুল
               </span>
-            </span>{" "}
-            <span className="text-white drop-shadow-[0_2px_12px_rgba(27,69,148,0.5)]">
-              ইশকুল
             </span>
           </h1>
 
@@ -131,7 +140,7 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
             </Link>
             <Link
               href="/problems"
-              className="btn bg-white/15 text-white ring-1 ring-white/40 backdrop-blur hover:bg-white/25"
+              className="btn bg-white/10 text-white ring-1 ring-white/25 backdrop-blur hover:bg-white/20"
             >
               <Swords className="h-5 w-5" />
               {t("hero.solveProblems")}
@@ -145,7 +154,7 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
                 <li key={p.href}>
                   <Link
                     href={p.href}
-                    className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
+                    className="flex items-center gap-2 rounded-2xl bg-white/[0.07] px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/10 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/[0.14]"
                   >
                     <Icon className="h-4 w-4 text-brand-orange" />
                     {t(p.key)}
@@ -166,7 +175,7 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
 
         <div className="relative animate-fade-up">
           <div
-            className="pointer-events-none absolute inset-0 -z-0 scale-95 rounded-[2.5rem] bg-white/10 blur-2xl"
+            className="pointer-events-none absolute inset-0 -z-0 scale-95 rounded-[2.5rem] bg-brand-orange/20 blur-2xl"
             aria-hidden
           />
           <Image
@@ -197,9 +206,9 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
             return (
               <div
                 key={s.en}
-                className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3.5 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15"
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3.5 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/[0.1]"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
                   <Icon className="h-5 w-5 text-brand-orange" />
                 </span>
                 <div className="min-w-0">
@@ -228,7 +237,7 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
         ))}
       </div>
 
-      <div className="relative border-t border-white/15 bg-black/10 py-3 backdrop-blur">
+      <div className="relative border-t border-white/10 bg-black/30 py-3 backdrop-blur">
         <div className="group flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
           <div className="flex min-w-full shrink-0 animate-marquee items-center gap-10 motion-reduce:animate-none">
             {[...TOPICS, ...TOPICS, ...TOPICS].map((topicItem, i) => (
@@ -243,6 +252,18 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
           </div>
         </div>
       </div>
+
+      <svg
+        className="relative block h-[52px] w-full text-white"
+        viewBox="0 0 1440 52"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <path
+          fill="currentColor"
+          d="M0,26 C240,52 480,0 720,20 C960,40 1200,10 1440,26 L1440,52 L0,52 Z"
+        />
+      </svg>
     </section>
   );
 }

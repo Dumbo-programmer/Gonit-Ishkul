@@ -30,8 +30,16 @@ export function CourseCard({ course }: { course: CourseCardData }) {
   return (
     <Link
       href={`/courses/${course.slug}`}
-      className="card group flex h-full flex-col gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-bubble"
+      className="card card-glow group relative flex h-full flex-col gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift"
     >
+      <span
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 opacity-0 transition group-hover:opacity-100"
+        style={{
+          background:
+            "linear-gradient(90deg, var(--brand-orange), var(--brand-purple), var(--brand-blue))",
+        }}
+        aria-hidden
+      />
       <div className="flex items-start justify-between gap-3">
         <span
           className="badge text-white"

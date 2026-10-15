@@ -6,6 +6,8 @@ import "katex/dist/katex.min.css";
 import { Providers } from "./providers";
 import { SiteNavbar } from "@/components/Navbar";
 import { SiteFooter } from "@/components/Footer";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { BackToTop } from "@/components/BackToTop";
 import type { Lang } from "@/lib/i18n/dictionary";
 
 const bangla = Hind_Siliguri({
@@ -61,9 +63,11 @@ export default function RootLayout({
     <html lang={lang} className={`${bangla.variable} ${display.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-white">
         <Providers initialLang={lang}>
+          <ScrollProgress />
           <SiteNavbar />
           <main>{children}</main>
           <SiteFooter />
+          <BackToTop />
         </Providers>
       </body>
     </html>

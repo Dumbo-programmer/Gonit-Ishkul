@@ -69,8 +69,8 @@ export function Gallery() {
   return (
     <section id="gallery" className="mx-auto max-w-7xl px-4 py-16">
       <div className="mb-10 text-center">
-        <h2 className="section-title">{t("gallery.title")}</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/70">
+        <h2 className="section-title title-accent center">{t("gallery.title")}</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-brand-charcoal/70">
           {t("gallery.subtitle")}
         </p>
       </div>

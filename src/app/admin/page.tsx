@@ -75,7 +75,7 @@ export default async function AdminPage() {
           {session.user.name} · {session.user.email}
         </span>
       </div>
-      <h1 className="section-title mt-3">প্ল্যাটফর্ম কন্ট্রোল সেন্টার</h1>
+      <h1 className="section-title title-accent mt-3">প্ল্যাটফর্ম কন্ট্রোল সেন্টার</h1>
       <p className="mt-2 text-brand-charcoal/65">
         সব মেট্রিক, আর্টিকেল পর্যালোচনা এবং ক্যাম্পাস দূত ব্যবস্থাপনা এক জায়গায়।
       </p>

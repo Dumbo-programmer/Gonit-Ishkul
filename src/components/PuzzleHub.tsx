@@ -66,7 +66,7 @@ export function PuzzleHub({
           <Puzzle className="h-4 w-4" />
           {t("arena.puzzleTitle")}
         </span>
-        <h1 className="section-title mt-4">{t("arena.puzzleTitle")}</h1>
+        <h1 className="section-title title-accent center mt-4">{t("arena.puzzleTitle")}</h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">{t("arena.puzzleSubtitle")}</p>
       </div>
 
@@ -152,10 +152,10 @@ export function PuzzleHub({
 
       {past.length > 0 && (
         <section className="space-y-4">
-          <h2 className="section-title !text-xl">{t("arena.puzzlePast")}</h2>
+          <h2 className="section-title title-accent mt-1 !text-2xl">{t("arena.puzzlePast")}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {past.map((p) => (
-              <article key={p.id} className="card space-y-2">
+              <article key={p.id} className="card card-glow space-y-2 transition hover:-translate-y-0.5 hover:shadow-lift">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-display font-bold text-brand-blue">
                     {lang === "bn" ? p.titleBn : p.titleEn}

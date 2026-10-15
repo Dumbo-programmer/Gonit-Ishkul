@@ -5,6 +5,7 @@ import { LayoutGrid } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { COURSE_CATEGORIES } from "@/lib/learning";
 import { CourseCard, type CourseCardData } from "@/components/CourseCard";
+import { EmptyState } from "@/components/EmptyState";
 
 export function CourseStorefront({ courses }: { courses: CourseCardData[] }) {
   const { lang, t } = useLang();
@@ -23,7 +24,7 @@ export function CourseStorefront({ courses }: { courses: CourseCardData[] }) {
           <LayoutGrid className="h-4 w-4" />
           {t("courses.title")}
         </span>
-        <h1 className="section-title mt-4">{t("courses.title")}</h1>
+        <h1 className="section-title title-accent center mt-4">{t("courses.title")}</h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">
           {t("courses.subtitle")}
         </p>
@@ -54,9 +55,9 @@ export function CourseStorefront({ courses }: { courses: CourseCardData[] }) {
       </div>
 
       {visible.length === 0 && (
-        <p className="mt-12 text-center text-brand-charcoal/60">
-          {t("courses.emptyState")}
-        </p>
+        <div className="mt-12">
+          <EmptyState icon={LayoutGrid} title={t("courses.emptyState")} />
+        </div>
       )}
     </div>
   );

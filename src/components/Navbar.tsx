@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { LogIn, LayoutDashboard, LogOut, Menu, X, ShieldCheck, UserRound } from "lucide-react";
@@ -13,6 +14,7 @@ export function SiteNavbar() {
   const { t } = useLang();
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   const links = [
     { href: "/", key: "common.home" },
@@ -24,18 +26,25 @@ export function SiteNavbar() {
     { href: "/resources", key: "common.resources" },
   ];
 
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-lavender/25 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-brand-lavender/25 bg-white/80 backdrop-blur-xl">
+      <span className="hairline-gradient pointer-events-none absolute inset-x-0 bottom-0 h-px" aria-hidden />
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/brand/logo.png"
-            alt="Prothom Alo Gonit Ishkul"
-            width={48}
-            height={48}
-            className="h-11 w-11 rounded-full object-contain"
-            priority
-          />
+        <Link href="/" className="group flex items-center gap-3">
+          <span className="relative">
+            <span className="absolute inset-0 rounded-full bg-brand-orange/30 blur-md transition group-hover:bg-brand-orange/50" />
+            <Image
+              src="/brand/logo.png"
+              alt="Prothom Alo Gonit Ishkul"
+              width={48}
+              height={48}
+              className="relative h-11 w-11 rounded-full object-contain ring-1 ring-brand-lavender/30 transition group-hover:-rotate-6"
+              priority
+            />
+          </span>
           <span className="hidden font-display text-lg font-bold leading-tight sm:block">
             <span className="text-brand-orange">গণিত</span>{" "}
             <span className="text-brand-blue">ইশকুল</span>
@@ -43,15 +52,26 @@ export function SiteNavbar() {
         </Link>
 
         <div className="hidden items-center gap-1 lg:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-full px-4 py-2 text-sm font-semibold text-brand-charcoal/80 transition hover:bg-brand-lavender/15 hover:text-brand-blue"
-            >
-              {t(link.key)}
-            </Link>
-          ))}
+          {links.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "relative rounded-full px-4 py-2 text-sm font-semibold transition",
+                  active
+                    ? "text-brand-blue"
+                    : "text-brand-charcoal/80 hover:bg-brand-lavender/15 hover:text-brand-blue",
+                )}
+              >
+                {t(link.key)}
+                {active && (
+                  <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-purple" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">

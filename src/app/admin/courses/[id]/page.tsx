@@ -42,7 +42,7 @@ export default async function AdminCourseDetailPage({
         <ArrowLeft className="h-4 w-4" /> সব কোর্স
       </Link>
 
-      <h1 className="section-title mt-4">কোর্স সম্পাদনা</h1>
+      <h1 className="section-title title-accent mt-4">কোর্স সম্পাদনা</h1>
       <p className="mt-1 text-sm text-brand-charcoal/60">
         স্লাগ: <span className="font-mono">{course.slug}</span>
       </p>

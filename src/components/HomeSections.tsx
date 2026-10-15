@@ -10,9 +10,14 @@ import {
   Users,
   Brain,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { Gallery } from "@/components/Gallery";
+import { HowItWorks } from "@/components/HowItWorks";
+import { LatestArticles, type LatestArticleItem } from "@/components/LatestArticles";
+import { HomeCta } from "@/components/HomeCta";
+import { MathDoodles } from "@/components/MathDoodles";
 
 const FEATURES = [
   {
@@ -59,14 +64,22 @@ const FEATURES = [
   },
 ];
 
-export function HomeSections() {
+export function HomeSections({ articles }: { articles: LatestArticleItem[] }) {
   const { t, lang } = useLang();
 
   return (
     <>
-      <section id="explore" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-16">
-        <div className="mb-10 text-center">
-          <h2 className="section-title">
+      <section
+        id="explore"
+        className="relative isolate mx-auto max-w-7xl scroll-mt-24 px-4 py-16"
+      >
+        <MathDoodles className="-z-10" />
+        <div className="relative mb-10 text-center">
+          <span className="badge bg-brand-gradient-soft text-brand-purple ring-1 ring-brand-lavender/30">
+            <Sparkles className="h-3.5 w-3.5" />
+            {lang === "bn" ? "গণিত ইশকুল কী" : "What is Gonit Ishkul"}
+          </span>
+          <h2 className="section-title title-accent center mt-4">
             {lang === "bn" ? "এক প্ল্যাটফর্মে সবকিছু" : "Everything in one platform"}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/70">
@@ -84,7 +97,7 @@ export function HomeSections() {
               <Link
                 key={f.href}
                 href={f.href}
-                className="group card flex flex-col transition hover:-translate-y-1 hover:border-brand-orange/40"
+                className="group card card-glow flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift"
               >
                 <span
                   className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${f.accent} text-white`}
@@ -102,6 +115,8 @@ export function HomeSections() {
           })}
         </div>
       </section>
+
+      <HowItWorks />
 
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <div className="relative overflow-hidden rounded-[2.5rem] bg-brand-gradient px-6 py-12 text-white shadow-bubble sm:px-12 sm:py-14">
@@ -141,20 +156,24 @@ export function HomeSections() {
         </div>
       </section>
 
-      <section className="bg-brand-blue/5">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 md:grid-cols-2">
-          <Image
-            src="/brand/gonit-bhaiya.jpeg"
-            alt="গণিত ভাইয়া"
-            width={420}
-            height={420}
-            className="mx-auto h-64 w-64 rounded-[2rem] object-cover ring-4 ring-brand-orange/30 sm:h-80 sm:w-80"
-          />
+      <section className="relative overflow-hidden bg-brand-blue/5">
+        <div className="pointer-events-none absolute inset-0 grid-overlay opacity-60" aria-hidden />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 md:grid-cols-2">
+          <div className="relative mx-auto">
+            <div className="absolute inset-0 rounded-[2rem] bg-brand-orange/25 blur-2xl motion-safe:animate-pulse-glow" aria-hidden />
+            <Image
+              src="/brand/gonit-bhaiya.jpeg"
+              alt="গণিত ভাইয়া"
+              width={420}
+              height={420}
+              className="relative h-64 w-64 rounded-[2rem] object-cover ring-4 ring-white sm:h-80 sm:w-80"
+            />
+          </div>
           <div>
             <span className="badge bg-brand-orange/15 text-brand-orange">
               {lang === "bn" ? "সাপ্তাহিক ধাঁধা" : "Weekly puzzle"}
             </span>
-            <h2 className="section-title mt-4">
+            <h2 className="section-title title-accent mt-4">
               {lang === "bn" ? "গণিত ভাইয়ার সাথে ধাঁধা ভাঙো" : "Crack puzzles with Gonit Bhaiya"}
             </h2>
             <p className="mt-4 text-brand-charcoal/75">
@@ -170,7 +189,11 @@ export function HomeSections() {
         </div>
       </section>
 
+      <LatestArticles articles={articles} />
+
       <Gallery />
+
+      <HomeCta />
     </>
   );
 }

@@ -39,7 +39,7 @@ export default async function AccountPage({
           <span className="badge bg-brand-blue/10 text-brand-blue">
             <PenLine className="h-4 w-4" /> আমার অ্যাকাউন্ট
           </span>
-          <h1 className="section-title mt-3">স্বাগতম, {session.user.name}</h1>
+          <h1 className="section-title title-accent mt-3">স্বাগতম, {session.user.name}</h1>
           <p className="mt-2 text-brand-charcoal/65">
             এখান থেকে তুমি তোমার জমা দেওয়া আর্টিকেল ট্র্যাক, দেখা ও সম্পাদনা করতে পারো।
           </p>

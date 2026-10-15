@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarClock, Swords, Trophy, Users } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { ContestCountdown } from "@/components/ContestCountdown";
+import { EmptyState } from "@/components/EmptyState";
 import type { ContestPhase } from "@/lib/arena";
 
 export interface ContestListItem {
@@ -29,7 +30,7 @@ export function ContestList({ contests }: { contests: ContestListItem[] }) {
   const { lang, t } = useLang();
 
   if (contests.length === 0) {
-    return <p className="card text-center text-brand-charcoal/60">{t("arena.noContests")}</p>;
+    return <EmptyState icon={Swords} title={t("arena.noContests")} />;
   }
 
   return (
@@ -45,7 +46,7 @@ export function ContestList({ contests }: { contests: ContestListItem[] }) {
           <Link
             key={c.slug}
             href={`/contests/${c.slug}`}
-            className="card group flex flex-col gap-3 transition-all hover:-translate-y-1 hover:shadow-bubble"
+            className="card card-glow group flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift"
           >
             <div className="flex items-center justify-between gap-2">
               <span className={`badge ${STATUS_STYLES[c.phase]}`}>

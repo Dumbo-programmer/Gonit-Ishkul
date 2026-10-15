@@ -35,7 +35,7 @@ export default async function ArticlesPage({
           <span className="badge bg-brand-purple/10 text-brand-purple">
             <PenLine className="h-4 w-4" /> আর্টিকেল ও জ্ঞান
           </span>
-          <h1 className="section-title mt-3">গণিতের আর্টিকেল ও ভাবনা</h1>
+          <h1 className="section-title title-accent mt-3">গণিতের আর্টিকেল ও ভাবনা</h1>
           <p className="mt-2 max-w-2xl text-brand-charcoal/65">
             শিক্ষার্থী ও ক্যাম্পাস দূতদের লেখা ফ্রি আর্টিকেল — পড়া শেখা, সমস্যার সমাধান আর
             অলিম্পিয়াড ভাবনা।

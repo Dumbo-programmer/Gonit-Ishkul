@@ -5,6 +5,7 @@ import { ClipboardCheck, Link2, User } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { gradeSubmissionAction } from "@/app/problems/actions";
 import { MathContent } from "@/components/MathContent";
+import { EmptyState } from "@/components/EmptyState";
 
 export interface GradingItem {
   id: string;
@@ -37,13 +38,13 @@ export function GradingQueue({ items }: { items: GradingItem[] }) {
           <ClipboardCheck className="h-4 w-4" />
           {t("arena.gradingTitle")}
         </span>
-        <h1 className="section-title mt-4">{t("arena.gradingTitle")}</h1>
+        <h1 className="section-title title-accent center mt-4">{t("arena.gradingTitle")}</h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">{t("arena.gradingSubtitle")}</p>
       </div>
 
       <div className="mt-8 space-y-5">
         {items.length === 0 ? (
-          <p className="card text-center text-brand-charcoal/60">{t("arena.gradingEmpty")}</p>
+          <EmptyState icon={ClipboardCheck} title={t("arena.gradingEmpty")} />
         ) : (
           items.map((item) => (
             <GradingCard key={item.id} item={item} lang={lang} t={t} />

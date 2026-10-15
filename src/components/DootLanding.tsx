@@ -123,7 +123,7 @@ export function DootLanding({
         </div>
 
         <div className="mt-14">
-          <h2 className="section-title mb-6 text-center">{t("doot.processTitle")}</h2>
+          <h2 className="section-title title-accent center mb-6 text-center">{t("doot.processTitle")}</h2>
           <ol className="grid gap-4 md:grid-cols-4">
             {[
               { bn: "আবেদন জমা", en: "Submit application", icon: ClipboardList },
@@ -151,7 +151,7 @@ export function DootLanding({
 
         <div className="mt-14">
           <div className="mb-6 text-center">
-            <h2 className="section-title">{t("doot.mapTitle")}</h2>
+            <h2 className="section-title title-accent center">{t("doot.mapTitle")}</h2>
             <p className="mt-2 text-brand-charcoal/70">{t("doot.mapSubtitle")}</p>
           </div>
           <AmbassadorMap coverage={coverage} schools={schools} />
@@ -160,7 +160,7 @@ export function DootLanding({
         <div className="mt-14">
           <div className="mb-6 flex items-center justify-center gap-2">
             <Medal className="h-6 w-6 text-brand-orange" />
-            <h2 className="section-title">{t("doot.boardTitle")}</h2>
+            <h2 className="section-title title-accent">{t("doot.boardTitle")}</h2>
           </div>
           <div className="card overflow-hidden !p-0">
             <table className="w-full text-left text-sm">

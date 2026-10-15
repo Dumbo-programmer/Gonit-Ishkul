@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CheckCircle2, Search, Sigma, Target } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
+import { EmptyState } from "@/components/EmptyState";
 import { PROBLEM_LEVELS, PROBLEM_TOPICS, difficultyLabel, levelLabel, topicMeta } from "@/lib/arena";
 import type { ProblemKind, ProblemLevel, ProblemTopic } from "@/lib/types";
 
@@ -54,7 +55,7 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
           <Sigma className="h-4 w-4" />
           {t("arena.archiveTitle")}
         </span>
-        <h1 className="section-title mt-4">{t("arena.archiveTitle")}</h1>
+        <h1 className="section-title title-accent center mt-4">{t("arena.archiveTitle")}</h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">
           {t("arena.archiveSubtitle")}
         </p>
@@ -106,7 +107,7 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
             <Link
               key={p.id}
               href={`/problems/${p.slug}`}
-              className="card group flex h-full flex-col gap-3 transition-all hover:-translate-y-1 hover:shadow-bubble"
+              className="card card-glow group flex h-full flex-col gap-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="badge text-white" style={{ backgroundColor: tm.tint }}>
@@ -147,7 +148,9 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
       </div>
 
       {visible.length === 0 && (
-        <p className="mt-12 text-center text-brand-charcoal/60">{t("arena.noProblems")}</p>
+        <div className="mt-12">
+          <EmptyState icon={Search} title={t("arena.noProblems")} />
+        </div>
       )}
     </div>
   );

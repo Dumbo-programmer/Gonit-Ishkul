@@ -35,25 +35,55 @@
     background: var(--brand-orange);
     color: white;
   }
+
+  :focus-visible {
+    outline: none;
+  }
+
+  html {
+    scrollbar-color: var(--brand-lavender) transparent;
+    scrollbar-width: thin;
+  }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3
       text-sm font-semibold transition-all duration-200 focus:outline-none
       focus-visible:ring-4 focus-visible:ring-brand-lavender/50 disabled:opacity-60;
   }
 
   .btn-primary {
-    @apply btn bg-brand-orange text-white shadow-bubble hover:bg-[#e8690f] hover:-translate-y-0.5;
+    @apply btn bg-brand-orange text-white shadow-glow hover:bg-[#e8690f] hover:-translate-y-0.5;
   }
 
   .btn-secondary {
-    @apply btn bg-brand-blue text-white shadow-bubble hover:bg-[#153a80] hover:-translate-y-0.5;
+    @apply btn bg-brand-blue text-white shadow-glow-blue hover:bg-[#153a80] hover:-translate-y-0.5;
   }
 
   .btn-ghost {
     @apply btn border-2 border-brand-blue/20 bg-white text-brand-blue hover:border-brand-blue/60;
+  }
+
+  .btn-primary::after,
+  .btn-secondary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-130%) skewX(-20deg);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    transition: transform 0.75s ease;
+  }
+
+  .btn-primary:hover::after,
+  .btn-secondary:hover::after {
+    transform: translateX(130%) skewX(-20deg);
   }
 
   .card {
@@ -98,6 +128,109 @@
     text-wrap: balance;
   }
 
+  .text-gradient {
+    background-image: linear-gradient(
+      120deg,
+      var(--brand-orange),
+      var(--brand-lavender) 45%,
+      var(--brand-blue)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-animate {
+    background-image: linear-gradient(
+      90deg,
+      var(--brand-orange),
+      var(--brand-purple),
+      var(--brand-blue),
+      var(--brand-orange)
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .grid-overlay {
+    background-image: linear-gradient(
+        to right,
+        rgba(27, 69, 148, 0.055) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(27, 69, 148, 0.055) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+
+  .hairline-gradient {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--brand-orange),
+      var(--brand-purple),
+      var(--brand-blue),
+      transparent
+    );
+  }
+
+  .card-glow {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .card-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 120, 30, 0.75),
+      rgba(121, 82, 179, 0.55),
+      rgba(27, 69, 148, 0.75)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .card-glow:hover::before {
+    opacity: 1;
+  }
+
+  .title-accent::after {
+    content: "";
+    display: block;
+    width: 72px;
+    height: 4px;
+    margin-top: 0.85rem;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      var(--brand-orange),
+      var(--brand-purple)
+    );
+  }
+
+  .title-accent.center::after {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     height: 8px;
     width: 8px;
@@ -105,6 +238,30 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: var(--brand-lavender);
     border-radius: 999px;
+  }
+}
+
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--brand-purple), var(--brand-blue));
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

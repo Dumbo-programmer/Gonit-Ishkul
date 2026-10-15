@@ -27,7 +27,7 @@ export function ContestBoard({
           <Swords className="h-4 w-4" />
           {t("arena.contestTitle")}
         </span>
-        <h1 className="section-title mt-4">{t("arena.contestTitle")}</h1>
+        <h1 className="section-title title-accent center mt-4">{t("arena.contestTitle")}</h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">{t("arena.contestSubtitle")}</p>
       </div>
 
@@ -37,7 +37,7 @@ export function ContestBoard({
 
       {ratings.length > 0 && (
         <section className="mt-12">
-          <h2 className="section-title inline-flex items-center gap-2 !text-2xl">
+          <h2 className="section-title title-accent mt-1 inline-flex items-center gap-2 !text-2xl">
             <Medal className="h-6 w-6 text-brand-orange" />
             {t("arena.ratingBoard")}
           </h2>
@@ -52,8 +52,25 @@ export function ContestBoard({
               </thead>
               <tbody>
                 {ratings.map((r, i) => (
-                  <tr key={r.userId} className="odd:bg-white even:bg-brand-purple/5">
-                    <td className="px-4 py-2 font-bold text-brand-charcoal/60">{i + 1}</td>
+                  <tr
+                    key={r.userId}
+                    className="odd:bg-white even:bg-brand-purple/5 transition hover:bg-brand-orange/5"
+                  >
+                    <td className="px-4 py-2 font-bold text-brand-charcoal/60">
+                      {i < 3 ? (
+                        <Medal
+                          className={`h-4 w-4 ${
+                            i === 0
+                              ? "text-amber-500"
+                              : i === 1
+                                ? "text-slate-400"
+                                : "text-amber-700"
+                          }`}
+                        />
+                      ) : (
+                        i + 1
+                      )}
+                    </td>
                     <td className="px-4 py-2">{r.name}</td>
                     <td className="px-4 py-2 text-right font-display font-bold text-brand-blue">
                       {r.rating}

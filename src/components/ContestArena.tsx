@@ -211,7 +211,7 @@ function StandingsStandalone({ standings }: { standings: ArenaStanding[] }) {
   if (standings.length === 0) return null;
   return (
     <div className="card">
-      <h2 className="section-title !text-xl">{t("arena.standings")}</h2>
+        <h2 className="section-title title-accent mt-2">{t("arena.standings")}</h2>
       <div className="mt-4 overflow-hidden rounded-2xl border border-brand-lavender/20">
         <table className="w-full text-left text-sm">
           <thead className="bg-brand-purple/10 font-display text-brand-charcoal/70">

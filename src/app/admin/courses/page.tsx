@@ -37,7 +37,7 @@ export default async function AdminCoursesPage() {
         </span>
         <span className="badge bg-emerald-100 text-emerald-700">মোট {courses.length}</span>
       </div>
-      <h1 className="section-title mt-3">কোর্স ও লেকচার</h1>
+      <h1 className="section-title title-accent mt-3">কোর্স ও লেকচার</h1>
       <p className="mt-2 text-brand-charcoal/65">
         নতুন ফ্রি ট্র্যাক তৈরি করুন, এবং প্রতিটির ভিডিও লেকচার পরিচালনা করুন।
       </p>
