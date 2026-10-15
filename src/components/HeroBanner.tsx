@@ -229,10 +229,10 @@ export function HeroBanner({ stats }: { stats: HeroStats }) {
         {CHIPS.map((c, i) => (
           <span
             key={i}
-            className="absolute select-none font-display text-2xl font-bold text-white/20 motion-safe:animate-float sm:text-3xl"
+            className={`absolute select-none font-display text-2xl font-bold text-white/20 motion-safe:animate-float sm:text-3xl ${c.className}`}
             style={{ animationDelay: c.delay }}
           >
-            <span className={c.className}>{c.sym}</span>
+            {c.sym}
           </span>
         ))}
       </div>
