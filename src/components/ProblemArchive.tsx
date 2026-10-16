@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CheckCircle2, Search, Sigma, Target } from "lucide-react";
+import { CheckCircle2, ListChecks, Search, Sigma, Target } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { EmptyState } from "@/components/EmptyState";
 import { PROBLEM_LEVELS, PROBLEM_TOPICS, difficultyLabel, levelLabel, topicMeta } from "@/lib/arena";
@@ -59,6 +59,13 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">
           {t("arena.archiveSubtitle")}
         </p>
+        <Link
+          href="/problems/practice"
+          className="btn-primary mx-auto mt-5 w-fit"
+        >
+          <ListChecks className="h-4 w-4" />
+          {lang === "bn" ? "প্র্যাকটিস টেস্ট বানাও" : "Build a practice test"}
+        </Link>
       </div>
 
       <div className="mt-8 flex flex-col gap-4">

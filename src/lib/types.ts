@@ -290,6 +290,30 @@ export interface ContestEntryRecord {
   createdAt: string;
 }
 
+export type PracticeTestStatus = "IN_PROGRESS" | "SUBMITTED";
+
+/** A user-generated mock exam: a random sample of problems matching filters. */
+export interface PracticeTestRecord {
+  id: string;
+  userId: string;
+  title: string;
+  topics: ProblemTopic[];
+  levels: ProblemLevel[];
+  difficultyMin: number;
+  difficultyMax: number;
+  timed: boolean;
+  durationMin?: number;
+  deadlineAt?: string;
+  problemIds: string[];
+  startedAt: string;
+  submittedAt?: string;
+  answers: Record<string, string>;
+  score: number;
+  maxScore: number;
+  results: Record<string, boolean>;
+  createdAt: string;
+}
+
 export interface PuzzleRecord {
   id: string;
   weekLabel: string;
