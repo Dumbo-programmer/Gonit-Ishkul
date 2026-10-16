@@ -1,3 +1,4 @@
+import { cache as reactCache } from "react";
 import bcrypt from "bcryptjs";
 import type {
   ApplicationRecord,
@@ -31,6 +32,12 @@ import type {
 } from "./types";
 import { getAdapter } from "./data";
 import type { DataAdapter } from "./data/types";
+
+// `cache` only exists at runtime in Next's server bundle (React 18.3 canary).
+// Fall back to a pass-through so non-Next consumers (Vitest, scripts) work.
+type Cacher = <T extends (...args: never[]) => unknown>(fn: T) => T;
+const cache: Cacher =
+  (reactCache as unknown as Cacher | undefined) ?? ((fn) => fn);
 
 export interface StoreShape {
   users: UserRecord[];
@@ -132,7 +139,7 @@ function backfillStore(store: StoreShape): boolean {
   return JSON.stringify(store) !== before;
 }
 
-let cache: StoreShape | null = null;
+let jsonCache: StoreShape | null = null;
 let seedPromise: Promise<void> | null = null;
 
 /**
@@ -155,33 +162,35 @@ async function ensureSeed(adapter: DataAdapter): Promise<void> {
 }
 
 /**
- * Load the store from the active backend.
+ * Load the store from the active backend, memoised once per request.
  *
  * - `json` mode keeps a per-process cache (fast, matches the previous
  *   in-memory behaviour).
- * - `postgres` mode reads on every call so writes from other instances are
- *   visible, seeding the database on first access.
+ * - `postgres` mode reads once per request (via React `cache`) and seeds the
+ *   database on first access. Without this, every repository call reloads the
+ *   whole store, pushing data-heavy pages past the serverless timeout and
+ *   surfacing as a client-side "Connection closed" error.
  */
-export async function getStore(): Promise<StoreShape> {
+export const getStore = cache(async (): Promise<StoreShape> => {
   const adapter = await getAdapter();
   if (adapter.kind === "json") {
-    if (!cache) {
+    if (!jsonCache) {
       const store = normalizeStore(await adapter.load());
       if (backfillStore(store)) {
         await adapter.save(store);
       }
-      cache = store;
+      jsonCache = store;
     }
-    return cache;
+    return jsonCache;
   }
   await ensureSeed(adapter);
   return normalizeStore(await adapter.load());
-}
+});
 
 export async function persistStore(store: StoreShape): Promise<void> {
   const adapter = await getAdapter();
   await adapter.save(store);
-  if (adapter.kind === "json") cache = store;
+  if (adapter.kind === "json") jsonCache = store;
 }
 
 function seedIfEmpty(store: StoreShape) {
