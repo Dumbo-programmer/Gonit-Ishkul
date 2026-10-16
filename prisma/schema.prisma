@@ -1,9 +1,10 @@
 // Prothom Alo Gonit Ishkul — Production data model (PostgreSQL target).
-// Local development runs against the JSON-backed repository in src/lib/repositories
-// so the app boots without a running database. Switch DATA_SOURCE=prisma to use this.
+// The app uses a pluggable storage adapter (src/lib/data): dev/test use a local
+// JSON file with no database, production uses Postgres when DATABASE_URL is set.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
