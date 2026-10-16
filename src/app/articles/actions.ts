@@ -80,7 +80,7 @@ export async function submitArticleAction(
     data.audience = "PUBLIC";
   }
 
-  createArticle({ id: session.user.uid, name: session.user.name ?? "Anonymous" }, data);
+  await createArticle({ id: session.user.uid, name: session.user.name ?? "Anonymous" }, data);
   revalidatePath("/articles");
   revalidatePath("/account");
   redirect("/account?submitted=1");
@@ -102,7 +102,7 @@ export async function updateArticleAction(
     data.audience = "PUBLIC";
   }
 
-  const updated = updateArticle(id, session.user.uid, data);
+  const updated = await updateArticle(id, session.user.uid, data);
   if (!updated) {
     return { ok: false, message: "লেখা সম্পাদনা করা যায়নি।" };
   }
@@ -115,7 +115,7 @@ export async function deleteArticleAction(formData: FormData): Promise<void> {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/auth/signin");
   const id = String(formData.get("id") ?? "");
-  deleteArticle(id, session.user.uid);
+  await deleteArticle(id, session.user.uid);
   revalidatePath("/account");
 }
 
@@ -128,7 +128,7 @@ export async function reviewArticleAction(formData: FormData): Promise<void> {
   const decision = String(formData.get("decision") ?? "");
   const note = String(formData.get("reviewerNote") ?? "").trim();
   if (decision !== "PUBLISHED" && decision !== "REJECTED") return;
-  reviewArticle(id, decision, note || undefined);
+  await reviewArticle(id, decision, note || undefined);
   revalidatePath("/admin");
   revalidatePath("/articles");
 }

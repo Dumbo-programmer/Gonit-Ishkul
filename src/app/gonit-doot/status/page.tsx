@@ -8,7 +8,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default function StatusPage({
+export default async function StatusPage({
   searchParams,
 }: {
   searchParams: { code?: string; email?: string };
@@ -18,8 +18,8 @@ export default function StatusPage({
   let application = null;
   if (query) {
     application = query.includes("@")
-      ? findApplicationByEmail(query) ?? null
-      : findApplicationByTrackingCode(query) ?? null;
+      ? (await findApplicationByEmail(query)) ?? null
+      : (await findApplicationByTrackingCode(query)) ?? null;
   }
 
   return (

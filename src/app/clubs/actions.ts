@@ -140,14 +140,14 @@ export async function registerClubAction(
   if (!can(session.user.role, "club.register")) {
     return { ok: false, message: "আপনার ক্লাব নিবন্ধনের অনুমতি নেই।" };
   }
-  if (getClubByRepresentative(session.user.uid)) {
+  if (await getClubByRepresentative(session.user.uid)) {
     return { ok: false, message: "আপনি ইতিমধ্যে একটি ক্লাবের প্রতিনিধি।" };
   }
 
   const { data, errors } = parseClub(formData);
   if (!data || errors) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
 
-  createClub(data, { id: session.user.uid, name: session.user.name ?? "প্রতিনিধি" });
+  await createClub(data, { id: session.user.uid, name: session.user.name ?? "প্রতিনিধি" });
   revalidatePath("/clubs");
   revalidatePath("/admin");
   redirect("/clubs/dashboard?registered=1");
@@ -160,7 +160,7 @@ export async function updateClubProfileAction(
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/auth/signin");
   const clubId = String(formData.get("clubId") ?? "");
-  const club = getClubById(clubId);
+  const club = await getClubById(clubId);
   if (!club) return { ok: false, message: "ক্লাব পাওয়া যায়নি।" };
 
   const isAdmin = can(session.user.role, "admin.all");
@@ -170,7 +170,7 @@ export async function updateClubProfileAction(
   const { data, errors } = parseClub(formData);
   if (!data || errors) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
 
-  updateClub(clubId, data, { requireReview: !isAdmin });
+  await updateClub(clubId, data, { requireReview: !isAdmin });
   revalidatePath("/clubs/dashboard");
   revalidatePath("/clubs");
   revalidatePath(`/clubs/${club.slug}`);
@@ -181,7 +181,7 @@ export async function updateClubProfileAction(
 async function resolveManagedClub(clubId: string) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return { error: "unauthorized" as const };
-  const club = getClubById(clubId);
+  const club = await getClubById(clubId);
   if (!club) return { error: "notfound" as const };
   const isAdmin = can(session.user.role, "admin.all");
   const isRep = club.representativeUserId === session.user.uid;
@@ -203,7 +203,7 @@ export async function createClubEntryAction(
   const { data, errors } = parseEntry(formData);
   if (!data || errors) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
 
-  createClubEntry(data, {
+  await createClubEntry(data, {
     id: managed.session.user.uid,
     name: managed.session.user.name ?? "প্রতিনিধি",
   });
@@ -228,7 +228,7 @@ export async function updateClubEntryAction(
   const { data, errors } = parseEntry(formData);
   if (!data || errors) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
 
-  const updated = updateClubEntry(id, session.user.uid, data);
+  const updated = await updateClubEntry(id, session.user.uid, data);
   if (!updated) return { ok: false, message: "জমাটি সম্পাদনা করা যায়নি।" };
   revalidatePath("/clubs/dashboard");
   revalidatePath(`/clubs/${managed.club.slug}`);
@@ -242,7 +242,7 @@ export async function deleteClubEntryAction(formData: FormData): Promise<void> {
   const clubId = String(formData.get("clubId") ?? "");
   const managed = await resolveManagedClub(clubId);
   if ("error" in managed) return;
-  deleteClubEntry(id, session.user.uid);
+  await deleteClubEntry(id, session.user.uid);
   revalidatePath("/clubs/dashboard");
   revalidatePath(`/clubs/${managed.club.slug}`);
 }

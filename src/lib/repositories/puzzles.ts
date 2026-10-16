@@ -2,14 +2,14 @@ import { getStore, persistStore, uid } from "@/lib/store";
 import type { PuzzleRecord, PuzzleSubmissionRecord } from "@/lib/types";
 import { answersMatch } from "@/lib/judge";
 
-export function listPuzzles(): PuzzleRecord[] {
-  return getStore()
+export async function listPuzzles(): Promise<PuzzleRecord[]> {
+  return (await getStore())
     .puzzles.filter((p) => p.published)
     .sort((a, b) => b.revealAt.localeCompare(a.revealAt));
 }
 
-export function getPuzzleById(id: string): PuzzleRecord | undefined {
-  return getStore().puzzles.find((p) => p.id === id);
+export async function getPuzzleById(id: string): Promise<PuzzleRecord | undefined> {
+  return (await getStore()).puzzles.find((p) => p.id === id);
 }
 
 export function isRevealed(puzzle: PuzzleRecord, now: number = Date.now()): boolean {
@@ -17,8 +17,10 @@ export function isRevealed(puzzle: PuzzleRecord, now: number = Date.now()): bool
 }
 
 /** The active weekly puzzle: the nearest unrevealed one, else the latest revealed. */
-export function currentPuzzle(now: number = Date.now()): PuzzleRecord | undefined {
-  const puzzles = listPuzzles();
+export async function currentPuzzle(
+  now: number = Date.now(),
+): Promise<PuzzleRecord | undefined> {
+  const puzzles = await listPuzzles();
   const upcoming = puzzles
     .filter((p) => !isRevealed(p, now))
     .sort((a, b) => a.revealAt.localeCompare(b.revealAt));
@@ -26,27 +28,29 @@ export function currentPuzzle(now: number = Date.now()): PuzzleRecord | undefine
   return puzzles[0];
 }
 
-export function listPuzzleSubmissions(puzzleId: string): PuzzleSubmissionRecord[] {
-  return getStore()
+export async function listPuzzleSubmissions(
+  puzzleId: string,
+): Promise<PuzzleSubmissionRecord[]> {
+  return (await getStore())
     .puzzleSubmissions.filter((s) => s.puzzleId === puzzleId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function getUserPuzzleSubmission(
+export async function getUserPuzzleSubmission(
   puzzleId: string,
   userId: string,
-): PuzzleSubmissionRecord | undefined {
-  return getStore().puzzleSubmissions.find(
+): Promise<PuzzleSubmissionRecord | undefined> {
+  return (await getStore()).puzzleSubmissions.find(
     (s) => s.puzzleId === puzzleId && s.userId === userId,
   );
 }
 
-export function createPuzzleSubmission(
+export async function createPuzzleSubmission(
   puzzleId: string,
   userId: string,
   content: string,
-): PuzzleSubmissionRecord | undefined {
-  const store = getStore();
+): Promise<PuzzleSubmissionRecord | undefined> {
+  const store = await getStore();
   const puzzle = store.puzzles.find((p) => p.id === puzzleId);
   if (!puzzle) return undefined;
   const now = new Date().toISOString();
@@ -57,7 +61,7 @@ export function createPuzzleSubmission(
   if (existing) {
     existing.content = content;
     existing.isCorrect = isCorrect;
-    persistStore(store);
+    await persistStore(store);
     return existing;
   }
   const record: PuzzleSubmissionRecord = {
@@ -69,6 +73,6 @@ export function createPuzzleSubmission(
     createdAt: now,
   };
   store.puzzleSubmissions.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }

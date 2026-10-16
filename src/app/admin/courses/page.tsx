@@ -20,7 +20,12 @@ export default async function AdminCoursesPage() {
     redirect("/auth/signin?callbackUrl=/admin/courses");
   }
 
-  const courses = listAllCourses();
+  const courses = await listAllCourses();
+  const lectureCounts = new Map(
+    await Promise.all(
+      courses.map(async (course) => [course.id, (await listLectures(course.id)).length] as const),
+    ),
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-14">
@@ -51,7 +56,7 @@ export default async function AdminCoursesPage() {
             {courses.map((course) => {
               const meta = courseCategoryMeta(course.category);
               const level = levelMeta(course.level);
-              const lectureCount = listLectures(course.id).length;
+              const lectureCount = lectureCounts.get(course.id) ?? 0;
               return (
                 <div key={course.id} className="card flex flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-2">

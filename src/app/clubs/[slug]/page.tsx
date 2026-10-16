@@ -95,7 +95,7 @@ export default async function ClubProfilePage({
 }: {
   params: { slug: string };
 }) {
-  const club = getClubBySlug(params.slug);
+  const club = await getClubBySlug(params.slug);
   if (!club) notFound();
 
   const session = await getServerSession(authOptions);
@@ -105,7 +105,7 @@ export default async function ClubProfilePage({
 
   if (!club.published && club.status !== "APPROVED" && !canManage) notFound();
 
-  const entries = canManage ? listClubEntries(club.id) : listApprovedClubEntries(club.id);
+  const entries = canManage ? await listClubEntries(club.id) : await listApprovedClubEntries(club.id);
 
   return (
     <div className="math-bg bg-brand-blue/5">

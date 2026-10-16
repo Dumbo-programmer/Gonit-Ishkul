@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import bcrypt from "bcryptjs";
 import type {
   ApplicationRecord,
@@ -31,6 +29,8 @@ import type {
   ClubRecord,
   ClubEntryRecord,
 } from "./types";
+import { getAdapter } from "./data";
+import type { DataAdapter } from "./data/types";
 
 export interface StoreShape {
   users: UserRecord[];
@@ -55,9 +55,6 @@ export interface StoreShape {
   clubs: ClubRecord[];
   clubEntries: ClubEntryRecord[];
 }
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "db.json");
 
 const COLLECTIONS: (keyof StoreShape)[] = [
   "users",
@@ -107,41 +104,84 @@ const emptyStore = (): StoreShape => ({
   clubEntries: [],
 });
 
-export function loadStore(): StoreShape {
-  if (fs.existsSync(DATA_FILE)) {
-    try {
-      const raw = fs.readFileSync(DATA_FILE, "utf-8");
-      const parsed = JSON.parse(raw) as Partial<StoreShape>;
-      const store = emptyStore();
-      for (const key of COLLECTIONS) {
-        if (Array.isArray(parsed[key])) {
-          (store[key] as unknown[]) = parsed[key] as never;
-        }
+/** Merge a persisted partial document into a fully-shaped store. */
+function normalizeStore(partial: Partial<StoreShape> | null): StoreShape {
+  const store = emptyStore();
+  if (partial) {
+    for (const key of COLLECTIONS) {
+      if (Array.isArray(partial[key])) {
+        (store[key] as unknown[]) = partial[key] as never;
       }
-      return store;
-    } catch {
-      // fall through to fresh store
     }
   }
-  return emptyStore();
+  return store;
+}
+
+/** A fully-seeded store, used the first time an empty backend is accessed. */
+/**
+ * Apply every per-collection seed guard to an existing store. Each guard is a
+ * no-op when its collection is already populated, so this safely backfills
+ * collections that were introduced after the store was first provisioned.
+ * Returns `true` when anything changed.
+ */
+function backfillStore(store: StoreShape): boolean {
+  const before = JSON.stringify(store);
+  seedIfEmpty(store);
+  seedArticlesIfEmpty(store);
+  seedClubsIfEmpty(store);
+  return JSON.stringify(store) !== before;
 }
 
 let cache: StoreShape | null = null;
+let seedPromise: Promise<void> | null = null;
 
-export function getStore(): StoreShape {
-  if (!cache) {
-    cache = loadStore();
-    void seedIfEmpty(cache);
-    void seedArticlesIfEmpty(cache);
-    void seedClubsIfEmpty(cache);
+/**
+ * Populate a freshly provisioned backend exactly once. Guarded by a per-process
+ * promise so concurrent cold-start requests don't double-seed.
+ */
+async function ensureSeed(adapter: DataAdapter): Promise<void> {
+  if (!seedPromise) {
+    seedPromise = (async () => {
+      const existing = normalizeStore(await adapter.load());
+      if (backfillStore(existing)) {
+        await adapter.save(existing);
+      }
+    })().catch((error) => {
+      seedPromise = null;
+      throw error;
+    });
   }
-  return cache;
+  await seedPromise;
 }
 
-export function persistStore(store: StoreShape = cache ?? loadStore()) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
-  cache = store;
+/**
+ * Load the store from the active backend.
+ *
+ * - `json` mode keeps a per-process cache (fast, matches the previous
+ *   in-memory behaviour).
+ * - `postgres` mode reads on every call so writes from other instances are
+ *   visible, seeding the database on first access.
+ */
+export async function getStore(): Promise<StoreShape> {
+  const adapter = await getAdapter();
+  if (adapter.kind === "json") {
+    if (!cache) {
+      const store = normalizeStore(await adapter.load());
+      if (backfillStore(store)) {
+        await adapter.save(store);
+      }
+      cache = store;
+    }
+    return cache;
+  }
+  await ensureSeed(adapter);
+  return normalizeStore(await adapter.load());
+}
+
+export async function persistStore(store: StoreShape): Promise<void> {
+  const adapter = await getAdapter();
+  await adapter.save(store);
+  if (adapter.kind === "json") cache = store;
 }
 
 function seedIfEmpty(store: StoreShape) {

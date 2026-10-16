@@ -29,17 +29,17 @@ export default async function CourseDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const course = getCourseBySlug(params.slug);
+  const course = await getCourseBySlug(params.slug);
   if (!course) notFound();
 
-  const lectures = listLectures(course.id);
+  const lectures = await listLectures(course.id);
   const level = levelMeta(course.level);
   const category = courseCategoryMeta(course.category);
   const totalSec = lectures.reduce((sum, l) => sum + l.durationSec, 0);
 
   const session = await getServerSession(authOptions);
-  const enrolled = session?.user ? isEnrolled(session.user.uid, course.id) : false;
-  const progress = session?.user ? getProgressMap(session.user.uid, course.id) : {};
+  const enrolled = session?.user ? await isEnrolled(session.user.uid, course.id) : false;
+  const progress = session?.user ? await getProgressMap(session.user.uid, course.id) : {};
 
   const learning = lectures.map((l) => ({
     id: l.id,
@@ -47,8 +47,9 @@ export default async function CourseDetailPage({
     durationSec: l.durationSec,
   }));
   const courseProgress = computeCourseProgress(learning, progress);
+  const quizzes = await Promise.all(lectures.map((l) => getQuiz(l.id)));
   const quizzedIds = new Set(
-    lectures.filter((l) => Boolean(getQuiz(l.id))).map((l) => l.id),
+    lectures.filter((_, i) => Boolean(quizzes[i])).map((l) => l.id),
   );
 
   return (

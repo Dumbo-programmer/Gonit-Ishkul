@@ -10,6 +10,9 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
+    env: {
+      DATA_SOURCE: "json",
+    },
   },
   resolve: {
     alias: {

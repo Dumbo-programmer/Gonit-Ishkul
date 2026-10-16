@@ -12,9 +12,12 @@ import { ClubCard } from "@/components/ClubCard";
 export const dynamic = "force-dynamic";
 
 export default async function ClubsPage() {
-  const clubs = listPublishedClubs();
+  const clubs = await listPublishedClubs();
   const session = await getServerSession(authOptions);
-  const myClub = session?.user ? getClubByRepresentative(session.user.uid) : undefined;
+  const myClub = session?.user ? await getClubByRepresentative(session.user.uid) : undefined;
+  const clubsWithCounts = await Promise.all(
+    clubs.map(async (club) => ({ club, counts: await clubEntryCounts(club.id) })),
+  );
 
   return (
     <div className="math-bg bg-brand-purple/5">
@@ -49,8 +52,8 @@ export default async function ClubsPage() {
           <p className="mt-12 text-brand-charcoal/60">এখনো কোনো অনুমোদিত ক্লাব নেই।</p>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {clubs.map((club) => (
-              <ClubCard key={club.id} club={club} counts={clubEntryCounts(club.id)} />
+            {clubsWithCounts.map(({ club, counts }) => (
+              <ClubCard key={club.id} club={club} counts={counts} />
             ))}
           </div>
         )}

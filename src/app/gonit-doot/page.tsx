@@ -8,23 +8,25 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default function GonitDootPage() {
+export default async function GonitDootPage() {
   const coverage: Record<string, number> = {};
-  for (const [district, count] of coverageByDistrict()) {
+  for (const [district, count] of await coverageByDistrict()) {
     coverage[district] = count;
   }
 
   const divisionByDistrict = new Map(DISTRICTS.map((d) => [d.en, d.division]));
   const schools: Record<string, number> = {};
-  for (const activity of listActivities()) {
+  for (const activity of await listActivities()) {
     const division = divisionByDistrict.get(activity.district);
     if (division) schools[division] = (schools[division] ?? 0) + 1;
   }
 
+  const leaderboard = await getLeaderboard();
+
   return (
     <DootLanding
       coverage={coverage}
-      leaderboard={getLeaderboard()}
+      leaderboard={leaderboard}
       schools={schools}
     />
   );

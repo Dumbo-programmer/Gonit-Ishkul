@@ -7,56 +7,56 @@ import type {
 } from "@/lib/types";
 import { answersMatch, scoreForVerdict, verdictForNumeric } from "@/lib/judge";
 
-export function listProblems(): ProblemRecord[] {
-  return getStore()
+export async function listProblems(): Promise<ProblemRecord[]> {
+  return (await getStore())
     .problems.filter((p) => p.published)
     .map((p) => ({ ...p }));
 }
 
-export function getProblemBySlug(slug: string): ProblemRecord | undefined {
-  return getStore().problems.find((p) => p.slug === slug);
+export async function getProblemBySlug(slug: string): Promise<ProblemRecord | undefined> {
+  return (await getStore()).problems.find((p) => p.slug === slug);
 }
 
-export function getProblemById(id: string): ProblemRecord | undefined {
-  return getStore().problems.find((p) => p.id === id);
+export async function getProblemById(id: string): Promise<ProblemRecord | undefined> {
+  return (await getStore()).problems.find((p) => p.id === id);
 }
 
-export function listProblemsByIds(ids: string[]): ProblemRecord[] {
-  const all = getStore().problems;
+export async function listProblemsByIds(ids: string[]): Promise<ProblemRecord[]> {
+  const all = (await getStore()).problems;
   return ids
     .map((id) => all.find((p) => p.id === id))
     .filter((p): p is ProblemRecord => Boolean(p));
 }
 
-export function listSubmissionsByProblem(problemId: string): SubmissionRecord[] {
-  return getStore()
+export async function listSubmissionsByProblem(problemId: string): Promise<SubmissionRecord[]> {
+  return (await getStore())
     .submissions.filter((s) => s.problemId === problemId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function listSubmissionsByUser(userId: string): SubmissionRecord[] {
-  return getStore()
+export async function listSubmissionsByUser(userId: string): Promise<SubmissionRecord[]> {
+  return (await getStore())
     .submissions.filter((s) => s.userId === userId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function getUserSubmission(
+export async function getUserSubmission(
   userId: string,
   problemId: string,
-): SubmissionRecord | undefined {
-  return getStore()
+): Promise<SubmissionRecord | undefined> {
+  return (await getStore())
     .submissions.filter((s) => s.userId === userId && s.problemId === problemId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
-export function listPendingSubmissions(): SubmissionRecord[] {
-  return getStore()
+export async function listPendingSubmissions(): Promise<SubmissionRecord[]> {
+  return (await getStore())
     .submissions.filter((s) => s.verdict === "PENDING")
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export function userSolved(userId: string, problemId: string): boolean {
-  return getStore().submissions.some(
+export async function userSolved(userId: string, problemId: string): Promise<boolean> {
+  return (await getStore()).submissions.some(
     (s) => s.userId === userId && s.problemId === problemId && s.verdict === "ACCEPTED",
   );
 }
@@ -70,8 +70,8 @@ export interface CreateSubmissionInput {
 }
 
 /** Creates a submission; numeric answers are auto-graded immediately. */
-export function createSubmission(input: CreateSubmissionInput): SubmissionRecord {
-  const store = getStore();
+export async function createSubmission(input: CreateSubmissionInput): Promise<SubmissionRecord> {
+  const store = (await getStore());
   const problem = store.problems.find((p) => p.id === input.problemId);
   const now = new Date().toISOString();
 
@@ -100,17 +100,17 @@ export function createSubmission(input: CreateSubmissionInput): SubmissionRecord
     updatedAt: now,
   };
   store.submissions.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }
 
-export function gradeSubmission(
+export async function gradeSubmission(
   id: string,
   verdict: Exclude<SubmissionVerdict, "PENDING">,
   feedback: string | undefined,
   gradedById: string,
-): SubmissionRecord | undefined {
-  const store = getStore();
+): Promise<SubmissionRecord | undefined> {
+  const store = (await getStore());
   const submission = store.submissions.find((s) => s.id === id);
   if (!submission) return undefined;
   const problem = store.problems.find((p) => p.id === submission.problemId);
@@ -120,6 +120,6 @@ export function gradeSubmission(
   submission.feedback = feedback;
   submission.gradedById = gradedById;
   submission.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return submission;
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { getStore } from "@/lib/store";
 
 const ALLOWED_NAMES = ["Tawhid", "Samin", "Siratim", "Sadat", "Sehtaj", "Omar"];
@@ -6,7 +6,11 @@ const ALLOWED_NAMES = ["Tawhid", "Samin", "Siratim", "Sadat", "Sehtaj", "Omar"];
 const CATEGORIES = ["TRIVIA", "SOLUTIONS", "MO_TRAINING", "ARTICLE_WRITING"];
 
 describe("seed data (Phase 4 reframe)", () => {
-  const store = getStore();
+  let store: Awaited<ReturnType<typeof getStore>>;
+
+  beforeAll(async () => {
+    store = await getStore();
+  });
 
   it("recycles only the six approved names across all people", () => {
     const names = new Set<string>();

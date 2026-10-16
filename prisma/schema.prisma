@@ -410,3 +410,11 @@ model ClubEntry {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 }
+
+/// Single-row JSON document holding the entire application store.
+/// Used by the Postgres storage adapter so only DATABASE_URL is required.
+model AppState {
+  id        Int      @id @default(1)
+  data      Json
+  updatedAt DateTime @updatedAt
+}

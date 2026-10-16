@@ -27,10 +27,10 @@ export default async function AdminClubDetailPage({
     redirect(`/auth/signin?callbackUrl=/admin/clubs/${params.id}`);
   }
 
-  const club = getClubById(params.id);
+  const club = await getClubById(params.id);
   if (!club) notFound();
 
-  const entries = listClubEntries(club.id);
+  const entries = await listClubEntries(club.id);
   const status = clubStatusMeta(club.status);
 
   return (

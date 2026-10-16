@@ -32,16 +32,16 @@ function toItem(p: PuzzleRecord, revealed: boolean): PuzzleItem {
 }
 
 export default async function GonitBhaiyaPage() {
-  const puzzle = currentPuzzle();
+  const puzzle = await currentPuzzle();
   if (!puzzle) redirect("/problems");
 
   const session = await getServerSession(authOptions);
   const revealed = isRevealed(puzzle);
   const submission = session?.user
-    ? getUserPuzzleSubmission(puzzle.id, session.user.uid)
+    ? await getUserPuzzleSubmission(puzzle.id, session.user.uid)
     : undefined;
 
-  const past = listPuzzles()
+  const past = (await listPuzzles())
     .filter((p) => p.id !== puzzle.id && isRevealed(p))
     .map((p) => toItem(p, true));
 

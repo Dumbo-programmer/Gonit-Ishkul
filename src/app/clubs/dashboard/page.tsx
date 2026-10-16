@@ -37,7 +37,7 @@ export default async function ClubDashboardPage() {
     redirect("/auth/signin?callbackUrl=/clubs/dashboard");
   }
 
-  const club = getClubByRepresentative(session.user.uid);
+  const club = await getClubByRepresentative(session.user.uid);
   const isAdmin = can(session.user.role, "admin.all");
 
   if (!club) {
@@ -66,7 +66,7 @@ export default async function ClubDashboardPage() {
     );
   }
 
-  const entries = listClubEntries(club.id);
+  const entries = await listClubEntries(club.id);
   const status = clubStatusMeta(club.status);
 
   return (

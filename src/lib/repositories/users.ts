@@ -2,13 +2,13 @@ import bcrypt from "bcryptjs";
 import { getStore, persistStore, uid } from "@/lib/store";
 import type { UserRecord, Role } from "@/lib/types";
 
-export function findUserByEmail(email: string): UserRecord | undefined {
+export async function findUserByEmail(email: string): Promise<UserRecord | undefined> {
   const normalized = email.trim().toLowerCase();
-  return getStore().users.find((u) => u.email.toLowerCase() === normalized);
+  return (await getStore()).users.find((u) => u.email.toLowerCase() === normalized);
 }
 
-export function findUserById(id: string): UserRecord | undefined {
-  return getStore().users.find((u) => u.id === id);
+export async function findUserById(id: string): Promise<UserRecord | undefined> {
+  return (await getStore()).users.find((u) => u.id === id);
 }
 
 export function verifyPassword(user: UserRecord, password: string): boolean {
@@ -16,13 +16,13 @@ export function verifyPassword(user: UserRecord, password: string): boolean {
   return bcrypt.compareSync(password, user.passwordHash);
 }
 
-export function createUser(input: {
+export async function createUser(input: {
   name: string;
   email: string;
   password: string;
   role?: Role;
-}): UserRecord {
-  const store = getStore();
+}): Promise<UserRecord> {
+  const store = await getStore();
   const user: UserRecord = {
     id: uid("usr"),
     name: input.name,
@@ -32,25 +32,28 @@ export function createUser(input: {
     createdAt: new Date().toISOString(),
   };
   store.users.push(user);
-  persistStore(store);
+  await persistStore(store);
   return user;
 }
 
-export function getAmbassadorEmails(): string[] {
-  return getStore()
+export async function getAmbassadorEmails(): Promise<string[]> {
+  return (await getStore())
     .users.filter((u) => u.role === "AMBASSADOR")
     .map((u) => u.email.toLowerCase());
 }
 
-export function listUsers(): UserRecord[] {
-  return [...getStore().users].sort((a, b) => a.name.localeCompare(b.name));
+export async function listUsers(): Promise<UserRecord[]> {
+  return [...(await getStore()).users].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function updateUserRole(userId: string, role: Role): UserRecord | undefined {
-  const store = getStore();
+export async function updateUserRole(
+  userId: string,
+  role: Role,
+): Promise<UserRecord | undefined> {
+  const store = await getStore();
   const user = store.users.find((u) => u.id === userId);
   if (!user) return undefined;
   user.role = role;
-  persistStore(store);
+  await persistStore(store);
   return user;
 }

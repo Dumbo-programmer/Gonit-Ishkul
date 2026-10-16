@@ -28,7 +28,7 @@ export default async function AccountPage({
     redirect("/auth/signin?callbackUrl=/account");
   }
 
-  const articles = listArticlesByAuthor(session.user.uid);
+  const articles = await listArticlesByAuthor(session.user.uid);
   const published = articles.filter((a) => a.status === "PUBLISHED").length;
   const pending = articles.filter((a) => a.status === "PENDING").length;
 

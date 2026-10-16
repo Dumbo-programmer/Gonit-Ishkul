@@ -17,7 +17,7 @@ export default async function EditArticlePage({
     redirect(`/auth/signin?callbackUrl=/account`);
   }
 
-  const article = getArticleById(params.id);
+  const article = await getArticleById(params.id);
   if (!article || article.authorId !== session.user.uid) notFound();
   if (article.status === "PUBLISHED") {
     redirect(`/articles/${article.slug}`);

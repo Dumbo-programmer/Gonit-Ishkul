@@ -25,6 +25,6 @@ export async function setUserRoleAction(formData: FormData): Promise<void> {
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "") as Role;
   if (!ASSIGNABLE_ROLES.includes(role)) return;
-  updateUserRole(userId, role);
+  await updateUserRole(userId, role);
   revalidatePath("/admin");
 }

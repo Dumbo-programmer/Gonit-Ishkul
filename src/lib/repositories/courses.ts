@@ -11,14 +11,14 @@ import type {
 import type { ProgressMap } from "@/lib/learning";
 import { isWatchedComplete } from "@/lib/learning";
 
-export function listCourses(): CourseRecord[] {
-  return getStore()
+export async function listCourses(): Promise<CourseRecord[]> {
+  return (await getStore())
     .courses.filter((c) => c.published)
     .map((c) => ({ ...c }));
 }
 
-export function listAllCourses(): CourseRecord[] {
-  return [...getStore().courses].sort((a, b) =>
+export async function listAllCourses(): Promise<CourseRecord[]> {
+  return [...(await getStore()).courses].sort((a, b) =>
     a.createdAt.localeCompare(b.createdAt),
   );
 }
@@ -34,8 +34,8 @@ export interface CourseInput {
   published: boolean;
 }
 
-function uniqueCourseSlug(base: string, ignoreId?: string): string {
-  const store = getStore();
+async function uniqueCourseSlug(base: string, ignoreId?: string): Promise<string> {
+  const store = await getStore();
   const root = slugify(base) || `course-${Date.now()}`;
   let slug = root;
   let n = 2;
@@ -46,11 +46,11 @@ function uniqueCourseSlug(base: string, ignoreId?: string): string {
   return slug;
 }
 
-export function createCourse(input: CourseInput): CourseRecord {
-  const store = getStore();
+export async function createCourse(input: CourseInput): Promise<CourseRecord> {
+  const store = await getStore();
   const course: CourseRecord = {
     id: uid("crs"),
-    slug: uniqueCourseSlug(input.titleEn || input.titleBn),
+    slug: await uniqueCourseSlug(input.titleEn || input.titleBn),
     titleBn: input.titleBn,
     titleEn: input.titleEn,
     level: input.level,
@@ -62,19 +62,19 @@ export function createCourse(input: CourseInput): CourseRecord {
     createdAt: new Date().toISOString(),
   };
   store.courses.push(course);
-  persistStore(store);
+  await persistStore(store);
   return course;
 }
 
-export function updateCourse(
+export async function updateCourse(
   id: string,
   input: CourseInput,
-): CourseRecord | undefined {
-  const store = getStore();
+): Promise<CourseRecord | undefined> {
+  const store = await getStore();
   const course = store.courses.find((c) => c.id === id);
   if (!course) return undefined;
   if (input.titleEn !== course.titleEn || input.titleBn !== course.titleBn) {
-    course.slug = uniqueCourseSlug(input.titleEn || input.titleBn, id);
+    course.slug = await uniqueCourseSlug(input.titleEn || input.titleBn, id);
   }
   course.titleBn = input.titleBn;
   course.titleEn = input.titleEn;
@@ -84,29 +84,31 @@ export function updateCourse(
   course.descEn = input.descEn;
   course.instructor = input.instructor;
   course.published = input.published;
-  persistStore(store);
+  await persistStore(store);
   return course;
 }
 
-export function setCoursePublished(id: string, published: boolean): void {
-  const store = getStore();
+export async function setCoursePublished(id: string, published: boolean): Promise<void> {
+  const store = await getStore();
   const course = store.courses.find((c) => c.id === id);
   if (!course) return;
   course.published = published;
-  persistStore(store);
+  await persistStore(store);
 }
 
-export function deleteCourse(id: string): boolean {
-  const store = getStore();
+export async function deleteCourse(id: string): Promise<boolean> {
+  const store = await getStore();
   const index = store.courses.findIndex((c) => c.id === id);
   if (index === -1) return false;
-  const lectureIds = store.lectures.filter((l) => l.courseId === id).map((l) => l.id);
+  const lectureIds = store.lectures
+    .filter((l) => l.courseId === id)
+    .map((l) => l.id);
   store.courses.splice(index, 1);
   store.lectures = store.lectures.filter((l) => l.courseId !== id);
   store.quizzes = store.quizzes.filter((q) => !lectureIds.includes(q.lectureId));
   store.enrollments = store.enrollments.filter((e) => e.courseId !== id);
   store.lectureProgress = store.lectureProgress.filter((p) => p.courseId !== id);
-  persistStore(store);
+  await persistStore(store);
   return true;
 }
 
@@ -118,11 +120,11 @@ export interface LectureInput {
   durationSec: number;
 }
 
-export function createLecture(
+export async function createLecture(
   courseId: string,
   input: LectureInput,
-): LectureRecord {
-  const store = getStore();
+): Promise<LectureRecord> {
+  const store = await getStore();
   const order =
     store.lectures.filter((l) => l.courseId === courseId).reduce(
       (max, l) => Math.max(max, l.order),
@@ -141,15 +143,15 @@ export function createLecture(
     attachments: [],
   };
   store.lectures.push(lecture);
-  persistStore(store);
+  await persistStore(store);
   return lecture;
 }
 
-export function updateLecture(
+export async function updateLecture(
   id: string,
   input: LectureInput,
-): LectureRecord | undefined {
-  const store = getStore();
+): Promise<LectureRecord | undefined> {
+  const store = await getStore();
   const lecture = store.lectures.find((l) => l.id === id);
   if (!lecture) return undefined;
   lecture.titleBn = input.titleBn;
@@ -157,12 +159,12 @@ export function updateLecture(
   lecture.videoUrl = input.videoUrl;
   lecture.poster = input.poster;
   lecture.durationSec = input.durationSec;
-  persistStore(store);
+  await persistStore(store);
   return lecture;
 }
 
-export function deleteLecture(id: string): boolean {
-  const store = getStore();
+export async function deleteLecture(id: string): Promise<boolean> {
+  const store = await getStore();
   const index = store.lectures.findIndex((l) => l.id === id);
   if (index === -1) return false;
   const courseId = store.lectures[index].courseId;
@@ -175,12 +177,12 @@ export function deleteLecture(id: string): boolean {
   remaining.forEach((l, i) => {
     l.order = i + 1;
   });
-  persistStore(store);
+  await persistStore(store);
   return true;
 }
 
-export function moveLecture(id: string, direction: "up" | "down"): void {
-  const store = getStore();
+export async function moveLecture(id: string, direction: "up" | "down"): Promise<void> {
+  const store = await getStore();
   const lecture = store.lectures.find((l) => l.id === id);
   if (!lecture) return;
   const siblings = store.lectures
@@ -193,40 +195,39 @@ export function moveLecture(id: string, direction: "up" | "down"): void {
   const tmp = lecture.order;
   lecture.order = other.order;
   other.order = tmp;
-  persistStore(store);
+  await persistStore(store);
 }
 
-
-export function getCourseBySlug(slug: string): CourseRecord | undefined {
-  return getStore().courses.find((c) => c.slug === slug);
+export async function getCourseBySlug(slug: string): Promise<CourseRecord | undefined> {
+  return (await getStore()).courses.find((c) => c.slug === slug);
 }
 
-export function getCourseById(id: string): CourseRecord | undefined {
-  return getStore().courses.find((c) => c.id === id);
+export async function getCourseById(id: string): Promise<CourseRecord | undefined> {
+  return (await getStore()).courses.find((c) => c.id === id);
 }
 
-export function listLectures(courseId: string): LectureRecord[] {
-  return getStore()
+export async function listLectures(courseId: string): Promise<LectureRecord[]> {
+  return (await getStore())
     .lectures.filter((l) => l.courseId === courseId)
     .sort((a, b) => a.order - b.order);
 }
 
-export function getLecture(id: string): LectureRecord | undefined {
-  return getStore().lectures.find((l) => l.id === id);
+export async function getLecture(id: string): Promise<LectureRecord | undefined> {
+  return (await getStore()).lectures.find((l) => l.id === id);
 }
 
-export function getQuiz(lectureId: string): QuizRecord | undefined {
-  return getStore().quizzes.find((q) => q.lectureId === lectureId);
+export async function getQuiz(lectureId: string): Promise<QuizRecord | undefined> {
+  return (await getStore()).quizzes.find((q) => q.lectureId === lectureId);
 }
 
-export function isEnrolled(userId: string, courseId: string): boolean {
-  return getStore().enrollments.some(
+export async function isEnrolled(userId: string, courseId: string): Promise<boolean> {
+  return (await getStore()).enrollments.some(
     (e) => e.userId === userId && e.courseId === courseId,
   );
 }
 
-export function enroll(userId: string, courseId: string): EnrollmentRecord {
-  const store = getStore();
+export async function enroll(userId: string, courseId: string): Promise<EnrollmentRecord> {
+  const store = await getStore();
   const existing = store.enrollments.find(
     (e) => e.userId === userId && e.courseId === courseId,
   );
@@ -238,17 +239,20 @@ export function enroll(userId: string, courseId: string): EnrollmentRecord {
     createdAt: new Date().toISOString(),
   };
   store.enrollments.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }
 
-export function listEnrollments(userId: string): EnrollmentRecord[] {
-  return getStore().enrollments.filter((e) => e.userId === userId);
+export async function listEnrollments(userId: string): Promise<EnrollmentRecord[]> {
+  return (await getStore()).enrollments.filter((e) => e.userId === userId);
 }
 
-export function getProgressMap(userId: string, courseId: string): ProgressMap {
+export async function getProgressMap(
+  userId: string,
+  courseId: string,
+): Promise<ProgressMap> {
   const map: ProgressMap = {};
-  for (const p of getStore().lectureProgress) {
+  for (const p of (await getStore()).lectureProgress) {
     if (p.userId === userId && p.courseId === courseId) {
       map[p.lectureId] = {
         watchedSec: p.watchedSec,
@@ -260,13 +264,13 @@ export function getProgressMap(userId: string, courseId: string): ProgressMap {
   return map;
 }
 
-export function saveWatchProgress(
+export async function saveWatchProgress(
   userId: string,
   courseId: string,
   lectureId: string,
   watchedSec: number,
-): void {
-  const store = getStore();
+): Promise<void> {
+  const store = await getStore();
   const lecture = store.lectures.find((l) => l.id === lectureId);
   if (!lecture) return;
   const clamped = Math.max(0, Math.min(watchedSec, lecture.durationSec));
@@ -290,16 +294,16 @@ export function saveWatchProgress(
   record.watchedSec = Math.max(record.watchedSec, clamped);
   record.completed = isWatchedComplete(record.watchedSec, lecture.durationSec);
   record.updatedAt = now;
-  persistStore(store);
+  await persistStore(store);
 }
 
-export function setQuizResult(
+export async function setQuizResult(
   userId: string,
   courseId: string,
   lectureId: string,
   passed: boolean,
-): void {
-  const store = getStore();
+): Promise<void> {
+  const store = await getStore();
   let record = store.lectureProgress.find(
     (p) => p.userId === userId && p.lectureId === lectureId,
   );
@@ -319,5 +323,5 @@ export function setQuizResult(
   }
   if (passed) record.quizPassed = true;
   record.updatedAt = now;
-  persistStore(store);
+  await persistStore(store);
 }

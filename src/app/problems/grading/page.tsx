@@ -15,18 +15,21 @@ export default async function GradingPage() {
   if (!session?.user) redirect("/auth/signin?callbackUrl=/problems/grading");
   if (!can(session.user.role, "contests.grade")) notFound();
 
-  const items: GradingItem[] = listPendingSubmissions().map((sub) => {
-    const problem = getProblemById(sub.problemId);
-    return {
-      id: sub.id,
-      problemTitleBn: problem?.titleBn ?? "—",
-      problemTitleEn: problem?.titleEn ?? "—",
-      studentName: findUserById(sub.userId)?.name ?? "—",
-      content: sub.content,
-      attachments: sub.attachments,
-      submittedAt: sub.createdAt,
-    };
-  });
+  const submissions = await listPendingSubmissions();
+  const items: GradingItem[] = await Promise.all(
+    submissions.map(async (sub) => {
+      const problem = await getProblemById(sub.problemId);
+      return {
+        id: sub.id,
+        problemTitleBn: problem?.titleBn ?? "—",
+        problemTitleEn: problem?.titleEn ?? "—",
+        studentName: (await findUserById(sub.userId))?.name ?? "—",
+        content: sub.content,
+        attachments: sub.attachments,
+        submittedAt: sub.createdAt,
+      };
+    }),
+  );
 
   return <GradingQueue items={items} />;
 }

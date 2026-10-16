@@ -15,15 +15,15 @@ export default async function ContestDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const contest = getContestBySlug(params.slug);
+  const contest = await getContestBySlug(params.slug);
   if (!contest) notFound();
 
   const session = await getServerSession(authOptions);
   const phase = contestPhase(contest);
   const entry =
-    session?.user ? getEntry(contest.id, session.user.uid) : undefined;
+    session?.user ? await getEntry(contest.id, session.user.uid) : undefined;
 
-  const problems = listProblemsByIds(contest.problemIds).map((p) => ({
+  const problems = (await listProblemsByIds(contest.problemIds)).map((p) => ({
     id: p.id,
     slug: p.slug,
     titleBn: p.titleBn,
@@ -41,7 +41,7 @@ export default async function ContestDetailPage({
         ? new Date(deadlineFor(contest, entry.startedAt)).toISOString()
         : contest.endAt;
 
-  const standings: ArenaStanding[] = contestStandings(contest.id).map((row) => ({
+  const standings: ArenaStanding[] = (await contestStandings(contest.id)).map((row) => ({
     rank: row.rank,
     name: row.name,
     score: row.score,

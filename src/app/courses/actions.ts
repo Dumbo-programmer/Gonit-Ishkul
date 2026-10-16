@@ -20,10 +20,10 @@ export async function enrollAction(formData: FormData): Promise<void> {
   if (!session?.user) {
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(`/courses/${slug}`)}`);
   }
-  const course = getCourseBySlug(slug);
+  const course = await getCourseBySlug(slug);
   if (!course) redirect("/courses");
 
-  enroll(session.user.uid, course.id);
+  await enroll(session.user.uid, course.id);
   revalidatePath(`/courses/${slug}`);
   redirect(`/courses/${slug}/learn`);
 }
@@ -35,7 +35,7 @@ export async function saveWatchProgressAction(
 ): Promise<{ ok: boolean }> {
   const session = await getServerSession(authOptions);
   if (!session?.user) return { ok: false };
-  saveWatchProgress(session.user.uid, courseId, lectureId, Math.round(watchedSec));
+  await saveWatchProgress(session.user.uid, courseId, lectureId, Math.round(watchedSec));
   return { ok: true };
 }
 
@@ -49,7 +49,7 @@ export async function submitQuizAction(
   const courseId = String(formData.get("courseId") ?? "");
   const slug = String(formData.get("slug") ?? "");
   const lectureId = String(formData.get("lectureId") ?? "");
-  const quiz = getQuiz(lectureId);
+  const quiz = await getQuiz(lectureId);
   if (!quiz) return { ok: false, message: "কুইজ পাওয়া যায়নি।" };
 
   const answers = quiz.questions.map((_, i) => {
@@ -64,7 +64,7 @@ export async function submitQuizAction(
 
   const result = gradeQuiz(quiz.questions, answers, quiz.passPercent);
   const results = quiz.questions.map((question, i) => answers[i] === question.answerIndex);
-  setQuizResult(session.user.uid, courseId, lectureId, result.passed);
+  await setQuizResult(session.user.uid, courseId, lectureId, result.passed);
 
   if (slug) revalidatePath(`/courses/${slug}/learn`);
 
@@ -84,5 +84,5 @@ export async function submitQuizAction(
 export async function isUserEnrolled(courseId: string): Promise<boolean> {
   const session = await getServerSession(authOptions);
   if (!session?.user) return false;
-  return isEnrolled(session.user.uid, courseId);
+  return await isEnrolled(session.user.uid, courseId);
 }

@@ -18,7 +18,7 @@ export default async function ArticleDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const article = getArticleBySlug(params.slug);
+  const article = await getArticleBySlug(params.slug);
   if (!article) notFound();
 
   const session = await getServerSession(authOptions);
@@ -33,7 +33,7 @@ export default async function ArticleDetailPage({
   }
 
   if (article.status === "PUBLISHED" && !isOwner) {
-    incrementArticleViews(article.id);
+    await incrementArticleViews(article.id);
   }
 
   const meta = courseCategoryMeta(article.category);

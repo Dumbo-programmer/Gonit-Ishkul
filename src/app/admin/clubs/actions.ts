@@ -49,11 +49,11 @@ export async function reviewClubAction(formData: FormData): Promise<void> {
   const note = String(formData.get("reviewerNote") ?? "").trim() || undefined;
   if (!id || !CLUB_DECISIONS.includes(decision)) return;
 
-  const club = getClubById(id);
-  const updated = reviewClub(id, decision as Extract<ClubStatus, "APPROVED" | "REJECTED" | "SUSPENDED">, note);
+  const club = await getClubById(id);
+  const updated = await reviewClub(id, decision as Extract<ClubStatus, "APPROVED" | "REJECTED" | "SUSPENDED">, note);
 
   if (decision === "APPROVED" && club?.representativeUserId) {
-    updateUserRole(club.representativeUserId, "CLUB");
+    await updateUserRole(club.representativeUserId, "CLUB");
   }
   revalidateClub(updated?.slug);
 }
@@ -62,14 +62,14 @@ export async function toggleClubPublishAction(formData: FormData): Promise<void>
   await requireAdmin();
   const id = String(formData.get("clubId") ?? "");
   const published = String(formData.get("published") ?? "") === "true";
-  const updated = setClubPublished(id, published);
+  const updated = await setClubPublished(id, published);
   revalidateClub(updated?.slug);
 }
 
 export async function deleteClubAdminAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("clubId") ?? "");
-  deleteClub(id);
+  await deleteClub(id);
   revalidatePath("/admin/clubs");
   revalidatePath("/clubs");
   redirect("/admin/clubs");
@@ -114,19 +114,19 @@ export async function reviewClubEntryAction(formData: FormData): Promise<void> {
   const note = String(formData.get("reviewerNote") ?? "").trim() || undefined;
   if (!id || !ENTRY_DECISIONS.includes(decision)) return;
 
-  const entry = getClubEntryById(id);
+  const entry = await getClubEntryById(id);
   const edits = decision === "APPROVED" ? parseEdits(formData) : undefined;
-  reviewClubEntry(id, decision as Extract<ModerationStatus, "APPROVED" | "REJECTED">, note, edits);
+  await reviewClubEntry(id, decision as Extract<ModerationStatus, "APPROVED" | "REJECTED">, note, edits);
 
-  const club = entry ? getClubById(entry.clubId) : undefined;
+  const club = entry ? await getClubById(entry.clubId) : undefined;
   revalidateClub(club?.slug);
 }
 
 export async function deleteClubEntryAdminAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("entryId") ?? "");
-  const entry = getClubEntryById(id);
-  const club = entry ? getClubById(entry.clubId) : undefined;
-  deleteClubEntry(id);
+  const entry = await getClubEntryById(id);
+  const club = entry ? await getClubById(entry.clubId) : undefined;
+  await deleteClubEntry(id);
   revalidateClub(club?.slug);
 }

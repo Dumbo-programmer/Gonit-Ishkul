@@ -1,4 +1,5 @@
 import { getStore, persistStore, uid } from "@/lib/store";
+import type { StoreShape } from "@/lib/store";
 import { slugify } from "@/lib/utils";
 import type {
   ArticleAudience,
@@ -17,7 +18,7 @@ export interface ArticleInput {
   coverUrl?: string;
 }
 
-function uniqueSlug(store: ReturnType<typeof getStore>, base: string): string {
+function uniqueSlug(store: StoreShape, base: string): string {
   const root = slugify(base) || `article-${Date.now()}`;
   let slug = root;
   let n = 2;
@@ -28,57 +29,57 @@ function uniqueSlug(store: ReturnType<typeof getStore>, base: string): string {
   return slug;
 }
 
-export function listPublishedArticles(filter?: {
+export async function listPublishedArticles(filter?: {
   audience?: ArticleAudience;
   category?: CourseCategory;
-}): ArticleRecord[] {
-  return getStore()
+}): Promise<ArticleRecord[]> {
+  return (await getStore())
     .articles.filter((a) => a.status === "PUBLISHED")
     .filter((a) => (filter?.audience ? a.audience === filter.audience : true))
     .filter((a) => (filter?.category ? a.category === filter.category : true))
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
 }
 
-export function getArticleBySlug(slug: string): ArticleRecord | undefined {
-  return getStore().articles.find((a) => a.slug === slug);
+export async function getArticleBySlug(slug: string): Promise<ArticleRecord | undefined> {
+  return (await getStore()).articles.find((a) => a.slug === slug);
 }
 
-export function getArticleById(id: string): ArticleRecord | undefined {
-  return getStore().articles.find((a) => a.id === id);
+export async function getArticleById(id: string): Promise<ArticleRecord | undefined> {
+  return (await getStore()).articles.find((a) => a.id === id);
 }
 
-export function listArticlesByAuthor(authorId: string): ArticleRecord[] {
-  return getStore()
+export async function listArticlesByAuthor(authorId: string): Promise<ArticleRecord[]> {
+  return (await getStore())
     .articles.filter((a) => a.authorId === authorId)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function listArticlesByStatus(status: ArticleStatus): ArticleRecord[] {
-  return getStore()
+export async function listArticlesByStatus(status: ArticleStatus): Promise<ArticleRecord[]> {
+  return (await getStore())
     .articles.filter((a) => a.status === status)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function listAllArticles(): ArticleRecord[] {
-  return [...getStore().articles].sort((a, b) =>
+export async function listAllArticles(): Promise<ArticleRecord[]> {
+  return [...(await getStore()).articles].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
 }
 
-export function incrementArticleViews(id: string): void {
-  const store = getStore();
+export async function incrementArticleViews(id: string): Promise<void> {
+  const store = await getStore();
   const article = store.articles.find((a) => a.id === id);
   if (!article) return;
   article.views += 1;
-  persistStore(store);
+  await persistStore(store);
 }
 
-export function createArticle(
+export async function createArticle(
   author: { id: string; name: string },
   input: ArticleInput,
   status: ArticleStatus = "PENDING",
-): ArticleRecord {
-  const store = getStore();
+): Promise<ArticleRecord> {
+  const store = await getStore();
   const now = new Date().toISOString();
   const record: ArticleRecord = {
     id: uid("art"),
@@ -98,17 +99,17 @@ export function createArticle(
     updatedAt: now,
   };
   store.articles.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }
 
-export function updateArticle(
+export async function updateArticle(
   id: string,
   authorId: string,
   input: ArticleInput,
   status: ArticleStatus = "PENDING",
-): ArticleRecord | undefined {
-  const store = getStore();
+): Promise<ArticleRecord | undefined> {
+  const store = await getStore();
   const article = store.articles.find((a) => a.id === id);
   if (!article || article.authorId !== authorId) return undefined;
   if (article.status === "PUBLISHED") return undefined;
@@ -122,16 +123,16 @@ export function updateArticle(
   article.status = status;
   article.reviewerNote = undefined;
   article.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return article;
 }
 
-export function reviewArticle(
+export async function reviewArticle(
   id: string,
   decision: Extract<ArticleStatus, "PUBLISHED" | "REJECTED">,
   reviewerNote?: string,
-): ArticleRecord | undefined {
-  const store = getStore();
+): Promise<ArticleRecord | undefined> {
+  const store = await getStore();
   const article = store.articles.find((a) => a.id === id);
   if (!article) return undefined;
   const now = new Date().toISOString();
@@ -139,17 +140,17 @@ export function reviewArticle(
   article.reviewerNote = reviewerNote;
   article.updatedAt = now;
   if (decision === "PUBLISHED") article.publishedAt = now;
-  persistStore(store);
+  await persistStore(store);
   return article;
 }
 
-export function deleteArticle(id: string, authorId: string): boolean {
-  const store = getStore();
+export async function deleteArticle(id: string, authorId: string): Promise<boolean> {
+  const store = await getStore();
   const index = store.articles.findIndex(
     (a) => a.id === id && a.authorId === authorId && a.status !== "PUBLISHED",
   );
   if (index === -1) return false;
   store.articles.splice(index, 1);
-  persistStore(store);
+  await persistStore(store);
   return true;
 }

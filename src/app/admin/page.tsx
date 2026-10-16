@@ -66,23 +66,23 @@ export default async function AdminPage() {
     redirect("/auth/signin?callbackUrl=/admin");
   }
 
-  const store = getStore();
-  const users = listUsers();
-  const articles = listAllArticles();
+  const store = await getStore();
+  const users = await listUsers();
+  const articles = await listAllArticles();
   const pendingArticles = articles.filter((a) => a.status === "PENDING");
-  const applications = listApplications();
+  const applications = await listApplications();
   const pendingApplications = applications.filter(
     (a) => a.status !== "ACCEPTED" && a.status !== "REJECTED",
   );
-  const activities = listActivities();
+  const activities = await listActivities();
   const pendingActivities = activities.filter((a) => a.status === "PENDING");
-  const leaderboard = getLeaderboard();
+  const leaderboard = await getLeaderboard();
   const totalViews = articles.reduce((sum, a) => sum + a.views, 0);
 
-  const clubSummary = clubModerationSummary();
-  const pendingClubs = listClubsByStatus("PENDING");
-  const pendingClubEntries = listClubEntriesByStatus("PENDING");
-  const allClubs = getStore().clubs;
+  const clubSummary = await clubModerationSummary();
+  const pendingClubs = await listClubsByStatus("PENDING");
+  const pendingClubEntries = await listClubEntriesByStatus("PENDING");
+  const allClubs = (await getStore()).clubs;
   const clubName = (id: string) => allClubs.find((c) => c.id === id)?.nameBn;
 
   const metrics = [

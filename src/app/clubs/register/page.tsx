@@ -13,7 +13,7 @@ export default async function RegisterClubPage() {
   if (!session?.user) {
     redirect("/auth/signin?callbackUrl=/clubs/register");
   }
-  const existing = getClubByRepresentative(session.user.uid);
+  const existing = await getClubByRepresentative(session.user.uid);
 
   return (
     <div className="math-bg bg-brand-purple/5">

@@ -19,11 +19,11 @@ export async function submitPuzzleAnswer(
 
   const puzzleId = String(formData.get("puzzleId") ?? "");
   const content = String(formData.get("content") ?? "").trim();
-  const puzzle = getPuzzleById(puzzleId);
+  const puzzle = await getPuzzleById(puzzleId);
   if (!puzzle) return { ok: false, message: "ধাঁধা পাওয়া যায়নি।" };
   if (!content) return { ok: false, message: "উত্তর লিখুন।" };
 
-  const submission = createPuzzleSubmission(puzzleId, session.user.uid, content);
+  const submission = await createPuzzleSubmission(puzzleId, session.user.uid, content);
   revalidatePath("/problems/gonit-bhaiya");
   if (!submission) return { ok: false, message: "জমা ব্যর্থ হয়েছে।" };
 

@@ -1,4 +1,5 @@
 import { getStore, persistStore, uid } from "@/lib/store";
+import type { StoreShape } from "@/lib/store";
 import { slugify } from "@/lib/utils";
 import type {
   ClubEntryRecord,
@@ -42,7 +43,7 @@ export interface ClubEntryInput {
   tags: string[];
 }
 
-function uniqueSlug(store: ReturnType<typeof getStore>, base: string): string {
+function uniqueSlug(store: StoreShape, base: string): string {
   const root = slugify(base) || `club-${Date.now()}`;
   let slug = root;
   let n = 2;
@@ -55,39 +56,41 @@ function uniqueSlug(store: ReturnType<typeof getStore>, base: string): string {
 
 // ─── Clubs ──────────────────────────────────────────────────────────────────
 
-export function listClubs(): ClubRecord[] {
-  return [...getStore().clubs].sort((a, b) => a.nameBn.localeCompare(b.nameBn));
+export async function listClubs(): Promise<ClubRecord[]> {
+  return [...(await getStore()).clubs].sort((a, b) => a.nameBn.localeCompare(b.nameBn));
 }
 
-export function listPublishedClubs(): ClubRecord[] {
-  return getStore()
+export async function listPublishedClubs(): Promise<ClubRecord[]> {
+  return (await getStore())
     .clubs.filter((c) => c.status === "APPROVED" && c.published)
     .sort((a, b) => a.nameBn.localeCompare(b.nameBn));
 }
 
-export function listClubsByStatus(status: ClubStatus): ClubRecord[] {
-  return getStore()
+export async function listClubsByStatus(status: ClubStatus): Promise<ClubRecord[]> {
+  return (await getStore())
     .clubs.filter((c) => c.status === status)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function getClubById(id: string): ClubRecord | undefined {
-  return getStore().clubs.find((c) => c.id === id);
+export async function getClubById(id: string): Promise<ClubRecord | undefined> {
+  return (await getStore()).clubs.find((c) => c.id === id);
 }
 
-export function getClubBySlug(slug: string): ClubRecord | undefined {
-  return getStore().clubs.find((c) => c.slug === slug);
+export async function getClubBySlug(slug: string): Promise<ClubRecord | undefined> {
+  return (await getStore()).clubs.find((c) => c.slug === slug);
 }
 
-export function getClubByRepresentative(userId: string): ClubRecord | undefined {
-  return getStore().clubs.find((c) => c.representativeUserId === userId);
+export async function getClubByRepresentative(
+  userId: string,
+): Promise<ClubRecord | undefined> {
+  return (await getStore()).clubs.find((c) => c.representativeUserId === userId);
 }
 
-export function createClub(
+export async function createClub(
   input: ClubInput,
   representative: { id: string; name: string },
-): ClubRecord {
-  const store = getStore();
+): Promise<ClubRecord> {
+  const store = await getStore();
   const now = new Date().toISOString();
   const record: ClubRecord = {
     id: uid("club"),
@@ -112,20 +115,16 @@ export function createClub(
     updatedAt: now,
   };
   store.clubs.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }
 
-/**
- * Updates club details. Representative edits send the club back for review
- * (status PENDING, unpublished); admin edits keep the current review state.
- */
-export function updateClub(
+export async function updateClub(
   id: string,
   input: ClubInput,
   options: { requireReview?: boolean } = {},
-): ClubRecord | undefined {
-  const store = getStore();
+): Promise<ClubRecord | undefined> {
+  const store = await getStore();
   const club = store.clubs.find((c) => c.id === id);
   if (!club) return undefined;
   club.name = input.name;
@@ -145,81 +144,88 @@ export function updateClub(
     club.published = false;
   }
   club.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return club;
 }
 
-export function reviewClub(
+export async function reviewClub(
   id: string,
   decision: Extract<ClubStatus, "APPROVED" | "REJECTED" | "SUSPENDED">,
   reviewerNote?: string,
-): ClubRecord | undefined {
-  const store = getStore();
+): Promise<ClubRecord | undefined> {
+  const store = await getStore();
   const club = store.clubs.find((c) => c.id === id);
   if (!club) return undefined;
   club.status = decision;
   club.reviewerNote = reviewerNote;
   club.published = decision === "APPROVED";
   club.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return club;
 }
 
-export function setClubPublished(id: string, published: boolean): ClubRecord | undefined {
-  const store = getStore();
+export async function setClubPublished(
+  id: string,
+  published: boolean,
+): Promise<ClubRecord | undefined> {
+  const store = await getStore();
   const club = store.clubs.find((c) => c.id === id);
   if (!club) return undefined;
   club.published = published;
   club.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return club;
 }
 
-export function deleteClub(id: string): boolean {
-  const store = getStore();
+export async function deleteClub(id: string): Promise<boolean> {
+  const store = await getStore();
   const index = store.clubs.findIndex((c) => c.id === id);
   if (index === -1) return false;
   store.clubs.splice(index, 1);
   store.clubEntries = store.clubEntries.filter((e) => e.clubId !== id);
-  persistStore(store);
+  await persistStore(store);
   return true;
 }
 
 // ─── Club entries ───────────────────────────────────────────────────────────
 
-export function listClubEntries(clubId: string): ClubEntryRecord[] {
-  return getStore()
+export async function listClubEntries(clubId: string): Promise<ClubEntryRecord[]> {
+  return (await getStore())
     .clubEntries.filter((e) => e.clubId === clubId)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function listApprovedClubEntries(clubId: string): ClubEntryRecord[] {
-  return getStore()
+export async function listApprovedClubEntries(
+  clubId: string,
+): Promise<ClubEntryRecord[]> {
+  return (await getStore())
     .clubEntries.filter((e) => e.clubId === clubId && e.status === "APPROVED")
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function listClubEntriesByStatus(status: ModerationStatus): ClubEntryRecord[] {
-  return getStore()
+export async function listClubEntriesByStatus(
+  status: ModerationStatus,
+): Promise<ClubEntryRecord[]> {
+  return (await getStore())
     .clubEntries.filter((e) => e.status === status)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function listAllClubEntries(): ClubEntryRecord[] {
-  return [...getStore().clubEntries].sort((a, b) =>
+export async function listAllClubEntries(): Promise<ClubEntryRecord[]> {
+  return [...(await getStore()).clubEntries].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
 }
 
-export function getClubEntryById(id: string): ClubEntryRecord | undefined {
-  return getStore().clubEntries.find((e) => e.id === id);
+export async function getClubEntryById(id: string): Promise<ClubEntryRecord | undefined> {
+  return (await getStore()).clubEntries.find((e) => e.id === id);
 }
 
-export function createClubEntry(
+export async function createClubEntry(
   input: ClubEntryInput,
   submitter: { id: string; name: string },
-): ClubEntryRecord {
-  const store = getStore();
+): Promise<ClubEntryRecord> {
+  const store = await getStore();
   const now = new Date().toISOString();
   const record: ClubEntryRecord = {
     id: uid("cle"),
@@ -244,16 +250,16 @@ export function createClubEntry(
     updatedAt: now,
   };
   store.clubEntries.push(record);
-  persistStore(store);
+  await persistStore(store);
   return record;
 }
 
-export function updateClubEntry(
+export async function updateClubEntry(
   id: string,
   submitterId: string,
   input: ClubEntryInput,
-): ClubEntryRecord | undefined {
-  const store = getStore();
+): Promise<ClubEntryRecord | undefined> {
+  const store = await getStore();
   const entry = store.clubEntries.find((e) => e.id === id);
   if (!entry || entry.submittedById !== submitterId) return undefined;
   entry.type = input.type;
@@ -272,18 +278,18 @@ export function updateClubEntry(
   entry.status = "PENDING";
   entry.reviewerNote = undefined;
   entry.updatedAt = new Date().toISOString();
-  persistStore(store);
+  await persistStore(store);
   return entry;
 }
 
 /** Moderator approval, optionally applying reviewer edits ("approve with changes"). */
-export function reviewClubEntry(
+export async function reviewClubEntry(
   id: string,
   decision: Extract<ModerationStatus, "APPROVED" | "REJECTED">,
   reviewerNote?: string,
   edits?: Partial<ClubEntryInput>,
-): ClubEntryRecord | undefined {
-  const store = getStore();
+): Promise<ClubEntryRecord | undefined> {
+  const store = await getStore();
   const entry = store.clubEntries.find((e) => e.id === id);
   if (!entry) return undefined;
   if (decision === "APPROVED" && edits) {
@@ -299,23 +305,25 @@ export function reviewClubEntry(
     if (edits.location !== undefined) entry.location = edits.location;
     if (edits.tags !== undefined) entry.tags = edits.tags;
   }
-  const now = new Date().toISOString();
   entry.status = decision;
   entry.reviewerNote = reviewerNote;
-  entry.updatedAt = now;
-  if (decision === "APPROVED") entry.approvedAt = now;
-  persistStore(store);
+  entry.updatedAt = new Date().toISOString();
+  if (decision === "APPROVED") entry.approvedAt = new Date().toISOString();
+  await persistStore(store);
   return entry;
 }
 
-export function deleteClubEntry(id: string, submitterId?: string): boolean {
-  const store = getStore();
+export async function deleteClubEntry(
+  id: string,
+  submitterId?: string,
+): Promise<boolean> {
+  const store = await getStore();
   const index = store.clubEntries.findIndex(
     (e) => e.id === id && (submitterId === undefined || e.submittedById === submitterId),
   );
   if (index === -1) return false;
   store.clubEntries.splice(index, 1);
-  persistStore(store);
+  await persistStore(store);
   return true;
 }
 
@@ -329,11 +337,11 @@ export interface ClubEntryCounts {
   total: number;
 }
 
-export function clubEntryCounts(
+export async function clubEntryCounts(
   clubId: string,
   status: ModerationStatus = "APPROVED",
-): ClubEntryCounts {
-  const entries = getStore().clubEntries.filter(
+): Promise<ClubEntryCounts> {
+  const entries = (await getStore()).clubEntries.filter(
     (e) => e.clubId === clubId && e.status === status,
   );
   const counts: ClubEntryCounts = {
@@ -354,8 +362,8 @@ export interface ClubModerationSummary {
   totalEntries: number;
 }
 
-export function clubModerationSummary(): ClubModerationSummary {
-  const store = getStore();
+export async function clubModerationSummary(): Promise<ClubModerationSummary> {
+  const store = await getStore();
   return {
     pendingClubs: store.clubs.filter((c) => c.status === "PENDING").length,
     pendingEntries: store.clubEntries.filter((e) => e.status === "PENDING").length,

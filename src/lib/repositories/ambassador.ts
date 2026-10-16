@@ -23,11 +23,11 @@ export interface ApplicationInput {
   shareUrl?: string;
 }
 
-export function createApplication(
+export async function createApplication(
   input: ApplicationInput,
   userId?: string | null,
-): ApplicationRecord {
-  const store = getStore();
+): Promise<ApplicationRecord> {
+  const store = (await getStore());
   const now = new Date().toISOString();
   const app: ApplicationRecord = {
     id: uid("app"),
@@ -40,36 +40,36 @@ export function createApplication(
     updatedAt: now,
   };
   store.applications.push(app);
-  persistStore(store);
+  await persistStore(store);
   return app;
 }
 
-export function findApplicationByTrackingCode(
+export async function findApplicationByTrackingCode(
   trackingCode: string,
-): ApplicationRecord | undefined {
+): Promise<ApplicationRecord | undefined> {
   const code = trackingCode.trim().toUpperCase();
-  return getStore().applications.find((a) => a.trackingCode === code);
+  return (await getStore()).applications.find((a) => a.trackingCode === code);
 }
 
-export function findApplicationByEmail(
+export async function findApplicationByEmail(
   email: string,
-): ApplicationRecord | undefined {
+): Promise<ApplicationRecord | undefined> {
   const normalized = email.trim().toLowerCase();
-  return getStore().applications.find((a) => a.email === normalized);
+  return (await getStore()).applications.find((a) => a.email === normalized);
 }
 
-export function listApplications(): ApplicationRecord[] {
-  return [...getStore().applications].sort((a, b) =>
+export async function listApplications(): Promise<ApplicationRecord[]> {
+  return [...(await getStore()).applications].sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
 }
 
-export function updateApplicationStatus(
+export async function updateApplicationStatus(
   appId: string,
   status: ApplicationStatus,
   note?: string,
-): ApplicationRecord | undefined {
-  const store = getStore();
+): Promise<ApplicationRecord | undefined> {
+  const store = (await getStore());
   const app = store.applications.find((a) => a.id === appId);
   if (!app) return undefined;
   const now = new Date().toISOString();
@@ -77,7 +77,7 @@ export function updateApplicationStatus(
   app.reviewerNote = note;
   app.updatedAt = now;
   app.timeline.push({ status, note, createdAt: now });
-  persistStore(store);
+  await persistStore(store);
   return app;
 }
 
@@ -91,8 +91,8 @@ export interface ActivityInput {
   proofUrl?: string;
 }
 
-export function reportActivity(input: ActivityInput): ActivityRecord {
-  const store = getStore();
+export async function reportActivity(input: ActivityInput): Promise<ActivityRecord> {
+  const store = (await getStore());
   const now = new Date().toISOString();
   const computed = calculateActivityPoints({
     type: input.type,
@@ -106,24 +106,24 @@ export function reportActivity(input: ActivityInput): ActivityRecord {
     createdAt: now,
   };
   store.activities.push(activity);
-  persistStore(store);
+  await persistStore(store);
   return activity;
 }
 
-export function listActivities(ambassadorId?: string): ActivityRecord[] {
-  const all = getStore().activities;
+export async function listActivities(ambassadorId?: string): Promise<ActivityRecord[]> {
+  const all = (await getStore()).activities;
   const rows = ambassadorId
     ? all.filter((a) => a.ambassadorId === ambassadorId)
     : all;
   return [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function listApprovedActivities(): ActivityRecord[] {
-  return getStore().activities.filter((a) => a.status === "APPROVED");
+export async function listApprovedActivities(): Promise<ActivityRecord[]> {
+  return (await getStore()).activities.filter((a) => a.status === "APPROVED");
 }
 
-export function resolveActivity(activityId: string, approved: boolean, note?: string) {
-  const store = getStore();
+export async function resolveActivity(activityId: string, approved: boolean, note?: string) {
+  const store = (await getStore());
   const activity = store.activities.find((a) => a.id === activityId);
   if (!activity) return undefined;
   activity.status = approved ? "APPROVED" : "REJECTED";
@@ -138,15 +138,15 @@ export function resolveActivity(activityId: string, approved: boolean, note?: st
       createdAt: new Date().toISOString(),
     });
   }
-  persistStore(store);
+  await persistStore(store);
   return activity;
 }
 
-export function getLeaderboard() {
-  const store = getStore();
+export async function getLeaderboard() {
+  const store = (await getStore());
   const meta: Record<string, { name: string; district: string }> = {};
   for (const user of store.users) {
-    meta[user.id] = { name: user.name, district: getDistrict(user.id) };
+    meta[user.id] = { name: user.name, district: await getDistrict(user.id) };
   }
   const entries = store.pointEntries.map((p) => ({
     userId: p.userId,
@@ -155,22 +155,22 @@ export function getLeaderboard() {
   return buildLeaderboard(entries, meta);
 }
 
-export function getAmbassadorStats(userId: string) {
-  const all = getStore().activities.filter((a) => a.ambassadorId === userId);
+export async function getAmbassadorStats(userId: string) {
+  const all = (await getStore()).activities.filter((a) => a.ambassadorId === userId);
   const approved = all.filter((a) => a.status === "APPROVED");
-  const points = getStore()
+  const points = (await getStore())
     .pointEntries.filter((p) => p.userId === userId && p.source === "ACTIVITY")
     .reduce((sum, p) => sum + p.points, 0);
   return { total: all.length, approved: approved.length, points };
 }
 
-function getDistrict(userId: string) {
-  const app = getStore().applications.find((a) => a.userId === userId);
+async function getDistrict(userId: string) {
+  const app = (await getStore()).applications.find((a) => a.userId === userId);
   return app?.district ?? "—";
 }
 
-export function coverageByDistrict() {
-  const store = getStore();
+export async function coverageByDistrict() {
+  const store = (await getStore());
   const districtCounts = new Map<string, number>();
   for (const app of store.applications) {
     if (app.status === "ACCEPTED") {
@@ -180,13 +180,13 @@ export function coverageByDistrict() {
   return districtCounts;
 }
 
-export function addPoints(
+export async function addPoints(
   userId: string,
   source: PointSource,
   points: number,
   reason: string,
 ) {
-  const store = getStore();
+  const store = (await getStore());
   store.pointEntries.push({
     id: uid("pt"),
     userId,
@@ -195,5 +195,5 @@ export function addPoints(
     reason,
     createdAt: new Date().toISOString(),
   });
-  persistStore(store);
+  await persistStore(store);
 }

@@ -29,10 +29,10 @@ export default async function AdminClubsPage() {
     redirect("/auth/signin?callbackUrl=/admin/clubs");
   }
 
-  const summary = clubModerationSummary();
-  const pendingClubs = listClubs().filter((c) => c.status === "PENDING");
-  const clubs = listClubs();
-  const pendingEntries = listClubEntriesByStatus("PENDING");
+  const summary = await clubModerationSummary();
+  const pendingClubs = (await listClubs()).filter((c) => c.status === "PENDING");
+  const clubs = await listClubs();
+  const pendingEntries = await listClubEntriesByStatus("PENDING");
   const clubName = (id: string) => clubs.find((c) => c.id === id)?.nameBn;
 
   const metrics = [

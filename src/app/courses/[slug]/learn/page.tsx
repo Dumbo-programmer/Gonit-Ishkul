@@ -20,21 +20,21 @@ export default async function LearnPage({
   searchParams: { lecture?: string };
 }) {
   const session = await getServerSession(authOptions);
-  const course = getCourseBySlug(params.slug);
+  const course = await getCourseBySlug(params.slug);
   if (!course) notFound();
 
   if (!session?.user) {
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(`/courses/${course.slug}/learn`)}`);
   }
-  if (!isEnrolled(session.user.uid, course.id)) {
+  if (!(await isEnrolled(session.user.uid, course.id))) {
     redirect(`/courses/${course.slug}`);
   }
 
-  const lectures = listLectures(course.id);
-  const quizzes = lectures
-    .map((l) => getQuiz(l.id))
-    .filter((q): q is NonNullable<typeof q> => Boolean(q));
-  const progress = getProgressMap(session.user.uid, course.id);
+  const lectures = await listLectures(course.id);
+  const quizzes = (
+    await Promise.all(lectures.map((l) => getQuiz(l.id)))
+  ).filter((q): q is NonNullable<typeof q> => Boolean(q));
+  const progress = await getProgressMap(session.user.uid, course.id);
 
   return (
     <div className="bg-brand-purple/5">

@@ -24,8 +24,8 @@ export default async function ReviewPage() {
     );
   }
 
-  const pending = listActivities().filter((a) => a.status === "PENDING");
-  const applications = listApplications();
+  const pending = (await listActivities()).filter((a) => a.status === "PENDING");
+  const applications = await listApplications();
 
   return (
     <div className="math-bg min-h-[70vh]">

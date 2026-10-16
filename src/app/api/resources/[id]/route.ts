@@ -7,10 +7,10 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ) {
-  const item = getResourceById(params.id);
+  const item = await getResourceById(params.id);
   if (!item) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
   }
-  incrementDownload(params.id);
+  await incrementDownload(params.id);
   return NextResponse.redirect(new URL(item.fileUrl, request.url));
 }

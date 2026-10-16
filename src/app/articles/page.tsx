@@ -24,7 +24,7 @@ export default async function ArticlesPage({
     ? (searchParams?.category as CourseCategory)
     : undefined;
 
-  const articles = listPublishedArticles({ category }).filter((a) =>
+  const articles = (await listPublishedArticles({ category })).filter((a) =>
     a.audience === "PUBLIC" ? true : canSeeAmbassador,
   );
 

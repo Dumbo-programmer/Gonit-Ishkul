@@ -51,14 +51,14 @@ export async function submitApplication(
   }
 
   const email = parsed.data.email.toLowerCase();
-  if (findUserByEmail(email)?.role === "AMBASSADOR") {
+  if ((await findUserByEmail(email))?.role === "AMBASSADOR") {
     return {
       ok: false,
       message: "এই ইমেইল দিয়ে ইতিমধ্যে একজন দূত নিবন্ধিত।",
     };
   }
 
-  const application = createApplication({
+  const application = await createApplication({
     ...parsed.data,
     studentId: parsed.data.studentId || undefined,
     resumeUrl: parsed.data.resumeUrl || undefined,
@@ -110,7 +110,7 @@ export async function submitActivityReport(
     return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
   }
 
-  reportActivity({
+  await reportActivity({
     ambassadorId: session.user.uid,
     type: parsed.data.type as ActivityType,
     title: parsed.data.title,
@@ -133,7 +133,7 @@ export async function resolveActivityAction(formData: FormData): Promise<void> {
   const decision = String(formData.get("decision") ?? "");
   if (!id) return;
 
-  resolveActivity(id, decision === "approve");
+  await resolveActivity(id, decision === "approve");
   revalidatePath("/gonit-doot/review");
   revalidatePath("/gonit-doot/dashboard");
 }
@@ -151,13 +151,13 @@ export async function reviewApplicationAction(formData: FormData): Promise<void>
     | "REJECTED";
   const note = String(formData.get("note") ?? "") || undefined;
   if (!id || !status) return;
-  updateApplicationStatus(id, status, note);
+  await updateApplicationStatus(id, status, note);
   revalidatePath("/gonit-doot/review");
   revalidatePath("/gonit-doot/status");
 }
 
 /** Ensures a Student user exists for a submitted application (kept for later phases). */
 export async function ensureApplicantUser(email: string, name: string) {
-  if (findUserByEmail(email)) return;
-  createUser({ name, email, password: "ChangeMe@12345", role: "STUDENT" });
+  if ((await findUserByEmail(email))) return;
+  await createUser({ name, email, password: "ChangeMe@12345", role: "STUDENT" });
 }

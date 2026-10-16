@@ -73,7 +73,7 @@ export async function createCourseAction(
     }
     throw err;
   }
-  const course = createCourse(data as CourseInput);
+  const course = await createCourse(data as CourseInput);
   revalidatePath("/admin/courses");
   revalidatePath("/courses");
   return { ok: true, message: "কোর্স তৈরি হয়েছে।", createdId: course.id };
@@ -96,7 +96,7 @@ export async function updateCourseAction(
     }
     throw err;
   }
-  const course = updateCourse(id, data as CourseInput);
+  const course = await updateCourse(id, data as CourseInput);
   if (!course) return { ok: false, message: "কোর্স পাওয়া যায়নি।" };
   revalidatePath("/admin/courses");
   revalidatePath(`/admin/courses/${id}`);
@@ -122,7 +122,7 @@ export async function createLectureAction(
     }
     throw err;
   }
-  const lecture = createLecture(courseId, {
+  const lecture = await createLecture(courseId, {
     titleBn: data.titleBn,
     titleEn: data.titleEn,
     videoUrl: data.videoUrl,
@@ -152,7 +152,7 @@ export async function updateLectureAction(
     }
     throw err;
   }
-  const lecture = updateLecture(id, {
+  const lecture = await updateLecture(id, {
     titleBn: data.titleBn,
     titleEn: data.titleEn,
     videoUrl: data.videoUrl,
@@ -169,7 +169,7 @@ export async function toggleCoursePublishAction(formData: FormData): Promise<voi
   if (!(await requireManager())) return;
   const id = String(formData.get("id") ?? "");
   const published = String(formData.get("published") ?? "") === "true";
-  setCoursePublished(id, published);
+  await setCoursePublished(id, published);
   revalidatePath("/admin/courses");
   revalidatePath("/courses");
 }
@@ -177,7 +177,7 @@ export async function toggleCoursePublishAction(formData: FormData): Promise<voi
 export async function deleteCourseAction(formData: FormData): Promise<void> {
   if (!(await requireManager())) return;
   const id = String(formData.get("id") ?? "");
-  deleteCourse(id);
+  await deleteCourse(id);
   revalidatePath("/admin/courses");
   revalidatePath("/courses");
 }
@@ -185,7 +185,7 @@ export async function deleteCourseAction(formData: FormData): Promise<void> {
 export async function deleteLectureAction(formData: FormData): Promise<void> {
   if (!(await requireManager())) return;
   const id = String(formData.get("id") ?? "");
-  deleteLecture(id);
+  await deleteLecture(id);
   revalidatePath(`/admin/courses/${String(formData.get("courseId") ?? "")}`);
   revalidatePath("/courses");
 }
@@ -195,6 +195,6 @@ export async function moveLectureAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   const direction = String(formData.get("direction") ?? "");
   if (direction !== "up" && direction !== "down") return;
-  moveLecture(id, direction);
+  await moveLecture(id, direction);
   revalidatePath(`/admin/courses/${String(formData.get("courseId") ?? "")}`);
 }

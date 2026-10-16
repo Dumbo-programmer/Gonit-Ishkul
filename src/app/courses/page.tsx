@@ -13,17 +13,17 @@ export const dynamic = "force-dynamic";
 
 export default async function CoursesPage() {
   const session = await getServerSession(authOptions);
-  const courses = listCourses();
+  const courses = await listCourses();
 
-  const cards: CourseCardData[] = courses.map((course) => {
-    const lectures = listLectures(course.id);
+  const cards: CourseCardData[] = await Promise.all(courses.map(async (course) => {
+    const lectures = await listLectures(course.id);
     const learning = lectures.map((l) => ({
       id: l.id,
       order: l.order,
       durationSec: l.durationSec,
     }));
-    const enrolled = session?.user ? isEnrolled(session.user.uid, course.id) : false;
-    const progress = session?.user ? getProgressMap(session.user.uid, course.id) : {};
+    const enrolled = session?.user ? await isEnrolled(session.user.uid, course.id) : false;
+    const progress = session?.user ? await getProgressMap(session.user.uid, course.id) : {};
     const percent = computeCourseProgress(learning, progress).percent;
     return {
       id: course.id,
@@ -42,7 +42,7 @@ export default async function CoursesPage() {
       enrolled,
       percent,
     };
-  });
+  }));
 
   return (
     <div className="math-bg min-h-[80vh] bg-brand-purple/5">

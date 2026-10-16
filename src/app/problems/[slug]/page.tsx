@@ -12,12 +12,12 @@ export default async function ProblemDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const problem = getProblemBySlug(params.slug);
+  const problem = await getProblemBySlug(params.slug);
   if (!problem) notFound();
 
   const session = await getServerSession(authOptions);
   const submission = session?.user
-    ? getUserSubmission(session.user.uid, problem.id)
+    ? await getUserSubmission(session.user.uid, problem.id)
     : undefined;
 
   return (

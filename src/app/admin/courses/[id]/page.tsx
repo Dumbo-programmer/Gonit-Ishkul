@@ -28,10 +28,10 @@ export default async function AdminCourseDetailPage({
     redirect("/auth/signin?callbackUrl=/admin/courses");
   }
 
-  const course = getCourseById(params.id);
+  const course = await getCourseById(params.id);
   if (!course) notFound();
 
-  const lectures = listLectures(course.id);
+  const lectures = await listLectures(course.id);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-14">

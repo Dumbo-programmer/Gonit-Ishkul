@@ -23,13 +23,13 @@ export async function submitNumericAnswer(
   const problemId = String(formData.get("problemId") ?? "");
   const slug = String(formData.get("slug") ?? "");
   const answer = String(formData.get("answer") ?? "");
-  const problem = getProblemById(problemId);
+  const problem = await getProblemById(problemId);
   if (!problem || problem.kind !== "NUMERIC") {
     return { ok: false, message: "সমস্যা পাওয়া যায়নি।" };
   }
   if (!answer.trim()) return { ok: false, message: "উত্তর লিখুন।" };
 
-  const record = createSubmission({
+  const record = await createSubmission({
     problemId,
     userId: session.user.uid,
     kind: "NUMERIC",
@@ -58,7 +58,7 @@ export async function submitProof(
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "ফর্মে ত্রুটি আছে।" };
   }
-  const problem = getProblemById(parsed.data.problemId);
+  const problem = await getProblemById(parsed.data.problemId);
   if (!problem || problem.kind !== "PROOF") {
     return { ok: false, message: "সমস্যা পাওয়া যায়নি।" };
   }
@@ -69,7 +69,7 @@ export async function submitProof(
     .filter(Boolean)
     .slice(0, 5);
 
-  createSubmission({
+  await createSubmission({
     problemId: parsed.data.problemId,
     userId: session.user.uid,
     kind: "PROOF",
@@ -91,6 +91,6 @@ export async function gradeSubmissionAction(formData: FormData): Promise<void> {
   const feedback = String(formData.get("feedback") ?? "").trim() || undefined;
   if (!submissionId || !["ACCEPTED", "PARTIAL", "WRONG"].includes(verdict)) return;
 
-  gradeSubmission(submissionId, verdict as "ACCEPTED" | "PARTIAL" | "WRONG", feedback, session.user.uid);
+  await gradeSubmission(submissionId, verdict as "ACCEPTED" | "PARTIAL" | "WRONG", feedback, session.user.uid);
   revalidatePath("/problems/grading");
 }

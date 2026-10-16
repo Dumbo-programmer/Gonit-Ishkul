@@ -22,13 +22,16 @@ export default async function DashboardPage() {
 
   const uid = session.user.uid;
   const application = session.user.email
-    ? findApplicationByEmail(session.user.email)
+    ? await findApplicationByEmail(session.user.email)
     : undefined;
 
-  const stats = getAmbassadorStats(uid);
-  const leaderboard = getLeaderboard();
+  const stats = await getAmbassadorStats(uid);
+  const leaderboard = await getLeaderboard();
   const rank = leaderboard.findIndex((r) => r.userId === uid) + 1;
   const totalPoints = leaderboard.find((r) => r.userId === uid)?.points ?? stats.points;
+  const activities = await listActivities(uid);
+  const resources = await listResourceKit();
+  const bulletins = await listBulletins();
 
   return (
     <DootDashboard
@@ -39,9 +42,9 @@ export default async function DashboardPage() {
       stats={stats}
       tier={tierForPoints(totalPoints)}
       rank={rank > 0 ? rank : leaderboard.length + 1}
-      activities={listActivities(uid)}
-      resources={listResourceKit()}
-      bulletins={listBulletins()}
+      activities={activities}
+      resources={resources}
+      bulletins={bulletins}
       leaderboard={leaderboard}
       canReview={can(session.user.role, "ambassador.review")}
     />

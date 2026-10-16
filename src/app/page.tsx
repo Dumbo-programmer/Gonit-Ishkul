@@ -9,15 +9,15 @@ import type { LatestArticleItem } from "@/components/LatestArticles";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
   const stats = {
-    learners: listUsers().length,
-    courses: listCourses().length,
-    problems: listProblems().length,
-    districts: coverageByDistrict().size,
+    learners: (await listUsers()).length,
+    courses: (await listCourses()).length,
+    problems: (await listProblems()).length,
+    districts: (await coverageByDistrict()).size,
   };
 
-  const articles: LatestArticleItem[] = listPublishedArticles()
+  const articles: LatestArticleItem[] = (await listPublishedArticles())
     .slice(0, 3)
     .map((a) => ({
       slug: a.slug,
