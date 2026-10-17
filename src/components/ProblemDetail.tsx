@@ -6,7 +6,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { MathContent } from "@/components/MathContent";
 import { NumericAnswerForm } from "@/components/NumericAnswerForm";
 import { ProofSubmitForm } from "@/components/ProofSubmitForm";
-import { difficultyLabel, levelLabel, topicMeta } from "@/lib/arena";
+import { PROBLEM_CATEGORIES, PROBLEM_COMPETITIONS, difficultyLabel, topicMeta } from "@/lib/arena";
 import type { ProblemKind, ProblemLevel, ProblemTopic, SubmissionVerdict } from "@/lib/types";
 
 export interface ProblemDetailProps {
@@ -59,9 +59,16 @@ export function ProblemDetail({ problem, loggedIn, submission, showSolution }: P
           <span className="badge text-white" style={{ backgroundColor: tm.tint }}>
             {lang === "bn" ? tm.bn : tm.en}
           </span>
-          <span className="badge bg-brand-lavender/15 text-brand-charcoal/70">
-            {lang === "bn" ? levelLabel(problem.levels[0]).bn : levelLabel(problem.levels[0]).en}
-          </span>
+          {PROBLEM_CATEGORIES.filter((c) => problem.levels.includes(c.value)).map((c) => (
+            <span key={c.value} className="badge bg-brand-blue/10 text-brand-blue">
+              {lang === "bn" ? c.bn : c.en}
+            </span>
+          ))}
+          {PROBLEM_COMPETITIONS.filter((c) => problem.levels.includes(c.value)).map((c) => (
+            <span key={c.value} className="badge bg-brand-purple/10 text-brand-purple">
+              {lang === "bn" ? c.bn : c.en}
+            </span>
+          ))}
           <span className="badge bg-brand-lavender/15 text-brand-charcoal/70">
             {difficultyLabel(problem.difficulty, lang)}
           </span>

@@ -29,15 +29,55 @@ export const PROBLEM_TOPICS: {
   { value: "PROOFS", bn: "প্রমাণ", en: "Proofs", tint: "#ED1C24" },
 ];
 
-export const PROBLEM_LEVELS: { value: ProblemLevel; bn: string; en: string }[] = [
+export interface ProblemLevelMeta {
+  value: ProblemLevel;
+  bn: string;
+  en: string;
+}
+
+/**
+ * "Category" answers *who* the problem is for (school class band).
+ * "Competition" answers *where* it came from (contest tier).
+ *
+ * They are independent dimensions: a BdMO Regional problem aimed at primary
+ * students carries both `PRIMARY` (category) and `BDMO_REGIONAL` (competition).
+ */
+export const PROBLEM_CATEGORIES: ProblemLevelMeta[] = [
   { value: "PRIMARY", bn: "প্রাথমিক", en: "Primary" },
   { value: "JUNIOR", bn: "জুনিয়র", en: "Junior" },
   { value: "SECONDARY", bn: "সেকেন্ডারি", en: "Secondary" },
   { value: "HIGHER_SECONDARY", bn: "উচ্চ মাধ্যমিক", en: "Higher Secondary" },
+];
+
+export const PROBLEM_COMPETITIONS: ProblemLevelMeta[] = [
   { value: "BDMO_REGIONAL", bn: "BdMO আঞ্চলিক", en: "BdMO Regional" },
   { value: "BDMO_NATIONAL", bn: "BdMO জাতীয়", en: "BdMO National" },
   { value: "IMO", bn: "IMO", en: "IMO" },
 ];
+
+export const PROBLEM_LEVELS: ProblemLevelMeta[] = [
+  ...PROBLEM_CATEGORIES,
+  ...PROBLEM_COMPETITIONS,
+];
+
+const CATEGORY_VALUES = new Set<ProblemLevel>(PROBLEM_CATEGORIES.map((c) => c.value));
+const COMPETITION_VALUES = new Set<ProblemLevel>(PROBLEM_COMPETITIONS.map((c) => c.value));
+
+export function isCategoryLevel(level: ProblemLevel): boolean {
+  return CATEGORY_VALUES.has(level);
+}
+
+export function isCompetitionLevel(level: ProblemLevel): boolean {
+  return COMPETITION_VALUES.has(level);
+}
+
+export function categoryMeta(level: ProblemLevel) {
+  return PROBLEM_CATEGORIES.find((c) => c.value === level);
+}
+
+export function competitionMeta(level: ProblemLevel) {
+  return PROBLEM_COMPETITIONS.find((c) => c.value === level);
+}
 
 export function topicMeta(topic: ProblemTopic) {
   return PROBLEM_TOPICS.find((t) => t.value === topic) ?? PROBLEM_TOPICS[0];

@@ -1,5 +1,6 @@
 import type { ProblemLevel, ProblemRecord, ProblemTopic } from "@/lib/types";
 import { answersMatch } from "@/lib/judge";
+import { isCategoryLevel, isCompetitionLevel } from "@/lib/arena";
 
 export interface PracticeConfig {
   topics: ProblemTopic[];
@@ -33,12 +34,55 @@ export function matchesFilters(
   config: PracticeFilterConfig,
 ): boolean {
   if (config.topics.length > 0 && !config.topics.includes(problem.topic)) return false;
-  if (config.levels.length > 0 && !problem.levels.some((l) => config.levels.includes(l))) {
+
+  // Levels live on two independent axes. Within an axis a selection is an OR
+  // (Junior *or* Secondary), but across axes it is an AND: picking
+  // "Primary" + "BdMO Regional" means primary-grade problems from the regional
+  // contest, not the union of both.
+  const categories = config.levels.filter(isCategoryLevel);
+  const competitions = config.levels.filter(isCompetitionLevel);
+
+  if (categories.length > 0 && !problem.levels.some((l) => categories.includes(l))) {
     return false;
   }
+  if (competitions.length > 0 && !problem.levels.some((l) => competitions.includes(l))) {
+    return false;
+  }
+
   if (problem.difficulty < config.difficultyMin) return false;
   if (problem.difficulty > config.difficultyMax) return false;
   return true;
+}
+
+/**
+ * Levels on one axis that still have at least one problem once the topics,
+ * difficulty range and the selections on the *other* axis are applied.
+ * Used to disable chips that would only ever produce an empty result.
+ */
+export function availableLevelsFor(
+  pool: PracticeFilterable[],
+  config: PracticeFilterConfig,
+  axis: "category" | "competition",
+): Set<ProblemLevel> {
+  const predicate = axis === "category" ? isCategoryLevel : isCompetitionLevel;
+  const otherPredicate = axis === "category" ? isCompetitionLevel : isCategoryLevel;
+  const otherSelections = config.levels.filter(otherPredicate);
+  const available = new Set<ProblemLevel>();
+  for (const problem of pool) {
+    if (config.topics.length > 0 && !config.topics.includes(problem.topic)) continue;
+    if (problem.difficulty < config.difficultyMin) continue;
+    if (problem.difficulty > config.difficultyMax) continue;
+    if (
+      otherSelections.length > 0 &&
+      !problem.levels.some((l) => otherPredicate(l) && otherSelections.includes(l))
+    ) {
+      continue;
+    }
+    for (const level of problem.levels) {
+      if (predicate(level)) available.add(level);
+    }
+  }
+  return available;
 }
 
 /** Numeric-only, published problems matching the chosen topic/level/difficulty filters. */

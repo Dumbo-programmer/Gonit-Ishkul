@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CheckCircle2, ListChecks, Search, Sigma, Target } from "lucide-react";
+import { CheckCircle2, ListChecks, RotateCcw, Search, Sigma, Target } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { EmptyState } from "@/components/EmptyState";
-import { PROBLEM_LEVELS, PROBLEM_TOPICS, difficultyLabel, levelLabel, topicMeta } from "@/lib/arena";
+import {
+  PROBLEM_CATEGORIES,
+  PROBLEM_COMPETITIONS,
+  PROBLEM_TOPICS,
+  difficultyLabel,
+  topicMeta,
+} from "@/lib/arena";
+import { matchesFilters, type PracticeFilterConfig } from "@/lib/practice";
 import type { ProblemKind, ProblemLevel, ProblemTopic } from "@/lib/types";
 
 export interface ProblemArchiveItem {
@@ -23,30 +30,88 @@ export interface ProblemArchiveItem {
   attempts: number;
 }
 
+interface ArchiveFilters {
+  topics: ProblemTopic[];
+  categories: ProblemLevel[];
+  competitions: ProblemLevel[];
+  difficultyMin: number;
+  difficultyMax: number;
+}
+
+const EMPTY_FILTERS: ArchiveFilters = {
+  topics: [],
+  categories: [],
+  competitions: [],
+  difficultyMin: 1,
+  difficultyMax: 5,
+};
+
+function toFilterConfig(filters: ArchiveFilters): PracticeFilterConfig {
+  return {
+    topics: filters.topics,
+    levels: [...filters.categories, ...filters.competitions],
+    difficultyMin: filters.difficultyMin,
+    difficultyMax: filters.difficultyMax,
+  };
+}
+
 export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] }) {
   const { lang, t } = useLang();
-  const [topic, setTopic] = useState<ProblemTopic | "ALL">("ALL");
-  const [level, setLevel] = useState<ProblemLevel | "ALL">("ALL");
+  const [filters, setFilters] = useState<ArchiveFilters>(EMPTY_FILTERS);
   const [query, setQuery] = useState("");
 
-  const visible = useMemo(() => {
+  const filteredBySearch = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return problems.filter((p) => {
-      if (topic !== "ALL" && p.topic !== topic) return false;
-      if (level !== "ALL" && !p.levels.includes(level)) return false;
-      if (q) {
-        const hay = `${p.titleBn} ${p.titleEn} ${p.source}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [problems, topic, level, query]);
+    if (!q) return problems;
+    return problems.filter((p) =>
+      `${p.titleBn} ${p.titleEn} ${p.source}`.toLowerCase().includes(q),
+    );
+  }, [problems, query]);
 
-  const topicCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of problems) counts[p.topic] = (counts[p.topic] ?? 0) + 1;
-    return counts;
-  }, [problems]);
+  const visible = useMemo(() => {
+    const config = toFilterConfig(filters);
+    return filteredBySearch.filter((p) => matchesFilters(p, config));
+  }, [filteredBySearch, filters]);
+
+  const counts = useMemo(() => {
+    const withOverride = (override: Partial<ArchiveFilters>): number => {
+      const config = toFilterConfig({ ...filters, ...override });
+      return filteredBySearch.filter((p) => matchesFilters(p, config)).length;
+    };
+    const topicCounts: Record<string, number> = {};
+    for (const tp of PROBLEM_TOPICS) {
+      topicCounts[tp.value] = withOverride({ topics: [tp.value] });
+    }
+    const categoryCounts: Record<string, number> = {};
+    for (const c of PROBLEM_CATEGORIES) {
+      categoryCounts[c.value] = withOverride({ categories: [c.value] });
+    }
+    const competitionCounts: Record<string, number> = {};
+    for (const c of PROBLEM_COMPETITIONS) {
+      competitionCounts[c.value] = withOverride({ competitions: [c.value] });
+    }
+    return { topicCounts, categoryCounts, competitionCounts };
+  }, [filteredBySearch, filters]);
+
+  const isFiltered =
+    query.trim().length > 0 ||
+    filters.topics.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.competitions.length > 0 ||
+    filters.difficultyMin > 1 ||
+    filters.difficultyMax < 5;
+
+  const toggle = <K extends "topics" | "categories" | "competitions">(
+    key: K,
+    value: ArchiveFilters[K][number],
+  ) =>
+    setFilters((f) => {
+      const list = f[key] as ArchiveFilters[K][number][];
+      const next = list.includes(value)
+        ? list.filter((v) => v !== value)
+        : [...list, value];
+      return { ...f, [key]: next } as ArchiveFilters;
+    });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
@@ -59,16 +124,13 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">
           {t("arena.archiveSubtitle")}
         </p>
-        <Link
-          href="/problems/practice"
-          className="btn-primary mx-auto mt-5 w-fit"
-        >
+        <Link href="/problems/practice" className="btn-primary mx-auto mt-5 w-fit">
           <ListChecks className="h-4 w-4" />
           {lang === "bn" ? "প্র্যাকটিস টেস্ট বানাও" : "Build a practice test"}
         </Link>
       </div>
 
-      <div className="mt-8 flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-5">
         <div className="relative mx-auto w-full max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-charcoal/40" />
           <input
@@ -79,37 +141,121 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
           />
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2">
-          <Chip active={topic === "ALL"} onClick={() => setTopic("ALL")} label={t("arena.allTopics")} tint="#222222" />
+        <FilterRow label={t("arena.filterTopic")}>
+          <Chip
+            active={filters.topics.length === 0}
+            onClick={() => setFilters((f) => ({ ...f, topics: [] }))}
+            label={t("arena.allTopics")}
+            tint="#222222"
+          />
           {PROBLEM_TOPICS.map((tp) => (
             <Chip
               key={tp.value}
-              active={topic === tp.value}
-              onClick={() => setTopic(tp.value)}
-              label={`${lang === "bn" ? tp.bn : tp.en} (${topicCounts[tp.value] ?? 0})`}
+              active={filters.topics.includes(tp.value)}
+              onClick={() => toggle("topics", tp.value)}
+              label={`${lang === "bn" ? tp.bn : tp.en} (${counts.topicCounts[tp.value] ?? 0})`}
               tint={tp.tint}
             />
           ))}
-        </div>
+        </FilterRow>
 
-        <div className="flex flex-wrap justify-center gap-2">
-          <Chip active={level === "ALL"} onClick={() => setLevel("ALL")} label={t("arena.allLevels")} tint="#7952B3" small />
-          {PROBLEM_LEVELS.map((lv) => (
+        <FilterRow label={t("arena.filterCategory")}>
+          <Chip
+            active={filters.categories.length === 0}
+            onClick={() => setFilters((f) => ({ ...f, categories: [] }))}
+            label={t("arena.allCategories")}
+            tint="#1B4594"
+            small
+          />
+          {PROBLEM_CATEGORIES.map((c) => (
             <Chip
-              key={lv.value}
-              active={level === lv.value}
-              onClick={() => setLevel(lv.value)}
-              label={lang === "bn" ? lv.bn : lv.en}
+              key={c.value}
+              active={filters.categories.includes(c.value)}
+              onClick={() => toggle("categories", c.value)}
+              label={`${lang === "bn" ? c.bn : c.en} (${counts.categoryCounts[c.value] ?? 0})`}
               tint="#1B4594"
               small
             />
           ))}
+        </FilterRow>
+
+        <FilterRow label={t("arena.filterCompetition")}>
+          <Chip
+            active={filters.competitions.length === 0}
+            onClick={() => setFilters((f) => ({ ...f, competitions: [] }))}
+            label={t("arena.allCompetitions")}
+            tint="#7952B3"
+            small
+          />
+          {PROBLEM_COMPETITIONS.map((c) => (
+            <Chip
+              key={c.value}
+              active={filters.competitions.includes(c.value)}
+              onClick={() => toggle("competitions", c.value)}
+              label={`${lang === "bn" ? c.bn : c.en} (${counts.competitionCounts[c.value] ?? 0})`}
+              tint="#7952B3"
+              small
+            />
+          ))}
+        </FilterRow>
+
+        <FilterRow label={t("arena.filterDifficulty")}>
+          <select
+            value={filters.difficultyMin}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setFilters((f) => ({ ...f, difficultyMin: v, difficultyMax: Math.max(v, f.difficultyMax) }));
+            }}
+            className="field-input !w-auto"
+          >
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {difficultyLabel(n, lang)}
+              </option>
+            ))}
+          </select>
+          <span className="text-brand-charcoal/40">—</span>
+          <select
+            value={filters.difficultyMax}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setFilters((f) => ({ ...f, difficultyMax: v, difficultyMin: Math.min(v, f.difficultyMin) }));
+            }}
+            className="field-input !w-auto"
+          >
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {difficultyLabel(n, lang)}
+              </option>
+            ))}
+          </select>
+        </FilterRow>
+
+        <div className="flex items-center justify-center gap-3 text-sm text-brand-charcoal/55">
+          <span className="font-semibold">
+            {visible.length} {t("arena.matchingCount")}
+          </span>
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setQuery("");
+              }}
+              className="inline-flex items-center gap-1 rounded-full border-2 border-brand-lavender/30 bg-white px-3 py-1 text-xs font-bold text-brand-charcoal/70 transition hover:border-brand-lavender/60"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t("arena.clearFilters")}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((p) => {
           const tm = topicMeta(p.topic);
+          const category = PROBLEM_CATEGORIES.filter((c) => p.levels.includes(c.value));
+          const competition = PROBLEM_COMPETITIONS.filter((c) => p.levels.includes(c.value));
           return (
             <Link
               key={p.id}
@@ -138,7 +284,7 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
 
               <div className="mt-auto flex flex-wrap items-center gap-2 text-xs font-semibold text-brand-charcoal/55">
                 <span className="rounded-full bg-brand-lavender/15 px-2.5 py-1">
-                  {"▲".repeat(Math.max(1, Math.min(5, p.difficulty)))}
+                  {"●".repeat(Math.max(1, Math.min(5, p.difficulty)))}
                 </span>
                 <span>{difficultyLabel(p.difficulty, lang)}</span>
                 {p.kind === "PROOF" && (
@@ -147,7 +293,16 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
                     {lang === "bn" ? "প্রমাণ" : "Proof"}
                   </span>
                 )}
-                <span className="ml-auto">{levelLabel(p.levels[0]).en}…</span>
+                {category.map((c) => (
+                  <span key={c.value} className="rounded-full bg-brand-blue/10 px-2.5 py-1 text-brand-blue">
+                    {lang === "bn" ? c.bn : c.en}
+                  </span>
+                ))}
+                {competition.map((c) => (
+                  <span key={c.value} className="rounded-full bg-brand-purple/10 px-2.5 py-1 text-brand-purple">
+                    {lang === "bn" ? c.bn : c.en}
+                  </span>
+                ))}
               </div>
             </Link>
           );
@@ -159,6 +314,15 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
           <EmptyState icon={Search} title={t("arena.noProblems")} />
         </div>
       )}
+    </div>
+  );
+}
+
+function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <span className="field-label !mb-0 text-center">{label}</span>
+      <div className="flex flex-wrap justify-center gap-2">{children}</div>
     </div>
   );
 }

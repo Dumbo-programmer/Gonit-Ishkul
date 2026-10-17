@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ProblemRecord } from "@/lib/types";
+import type { ProblemLevel, ProblemRecord } from "@/lib/types";
 import {
   gradePractice,
   matchesFilters,
@@ -49,8 +49,29 @@ describe("matchesFilters", () => {
     expect(matchesFilters(p, { ...baseConfig, topics: ["GEOMETRY"] })).toBe(true);
     expect(matchesFilters(p, { ...baseConfig, topics: ["ALGEBRA"] })).toBe(false);
     expect(matchesFilters(p, { ...baseConfig, levels: ["JUNIOR"] })).toBe(false);
-    expect(matchesFilters(p, { ...baseConfig, levels: ["IMO", "JUNIOR"] })).toBe(true);
+    expect(matchesFilters(p, { ...baseConfig, levels: ["IMO"] })).toBe(true);
     expect(matchesFilters(p, { ...baseConfig, difficultyMax: 4 })).toBe(false);
+  });
+
+  it("ORs selections within an axis", () => {
+    const p = problem({ levels: ["SECONDARY", "BDMO_REGIONAL"] });
+    expect(matchesFilters(p, { ...baseConfig, levels: ["JUNIOR", "SECONDARY"] })).toBe(true);
+    expect(matchesFilters(p, { ...baseConfig, levels: ["IMO", "BDMO_NATIONAL"] })).toBe(false);
+  });
+
+  it("ANDs selections across the category and competition axes", () => {
+    const primaryRegional = problem({ levels: ["PRIMARY", "BDMO_REGIONAL"] });
+    const secondaryRegional = problem({ levels: ["SECONDARY", "BDMO_REGIONAL"] });
+    const regionalOnly = problem({ levels: ["BDMO_REGIONAL"] });
+    const config = { ...baseConfig, levels: ["PRIMARY", "BDMO_REGIONAL"] as ProblemLevel[] };
+
+    // Category + Competition together narrow the result: only primary-grade
+    // regional problems survive, not the union of both selections.
+    expect(matchesFilters(primaryRegional, config)).toBe(true);
+    expect(matchesFilters(secondaryRegional, config)).toBe(false);
+
+    // A problem missing the category axis is excluded when a category is set.
+    expect(matchesFilters(regionalOnly, { ...baseConfig, levels: ["PRIMARY"] })).toBe(false);
   });
 });
 

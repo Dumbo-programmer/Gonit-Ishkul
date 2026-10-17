@@ -6,11 +6,17 @@ import { useFormStatus } from "react-dom";
 import { History, ListChecks, Play, Sparkles, Timer, Trash2 } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { Spinner } from "@/components/PageLoader";
-import { PROBLEM_LEVELS, PROBLEM_TOPICS, difficultyLabel } from "@/lib/arena";
+import {
+  PROBLEM_CATEGORIES,
+  PROBLEM_COMPETITIONS,
+  PROBLEM_TOPICS,
+  difficultyLabel,
+} from "@/lib/arena";
 import {
   PRACTICE_DURATIONS,
   PRACTICE_MAX_SIZE,
   PRACTICE_MIN_SIZE,
+  availableLevelsFor,
   matchesFilters,
   type PracticeFilterConfig,
   type PracticeFilterable,
@@ -70,37 +76,52 @@ function DeleteButton() {
 export function PracticeStart({ pool, history, error }: PracticeStartProps) {
   const { lang } = useLang();
   const [topics, setTopics] = useState<ProblemTopic[]>([]);
-  const [levels, setLevels] = useState<ProblemLevel[]>([]);
+  const [categories, setCategories] = useState<ProblemLevel[]>([]);
+  const [competitions, setCompetitions] = useState<ProblemLevel[]>([]);
   const [difficultyMin, setDifficultyMin] = useState(1);
   const [difficultyMax, setDifficultyMax] = useState(5);
   const [size, setSize] = useState(10);
   const [timed, setTimed] = useState(false);
   const [durationMin, setDurationMin] = useState(30);
 
-  const eligibleCount = useMemo(
-    () => countEligible(pool, { topics, levels, difficultyMin, difficultyMax }),
-    [pool, topics, levels, difficultyMin, difficultyMax],
+  // Category and Competition are independent axes; both are stored in the flat
+  // `levels` list the server action already understands.
+  const levels = useMemo(() => [...categories, ...competitions], [categories, competitions]);
+  const filterConfig: PracticeFilterConfig = useMemo(
+    () => ({ topics, levels, difficultyMin, difficultyMax }),
+    [topics, levels, difficultyMin, difficultyMax],
   );
 
-  // A level is only offerable if some problem at that level also falls inside the
-  // chosen difficulty range (and matches the selected topics). This stops
-  // contradictory picks like "Easy" + "IMO", which would otherwise match nothing.
-  const availableLevels = useMemo(() => {
-    const set = new Set<ProblemLevel>();
-    for (const problem of pool) {
-      if (topics.length > 0 && !topics.includes(problem.topic)) continue;
-      if (problem.difficulty < difficultyMin || problem.difficulty > difficultyMax) continue;
-      for (const level of problem.levels) set.add(level);
-    }
-    return set;
-  }, [pool, topics, difficultyMin, difficultyMax]);
+  const eligibleCount = useMemo(
+    () => countEligible(pool, filterConfig),
+    [pool, filterConfig],
+  );
+
+  // A chip is only offerable if some problem still matches once the topics,
+  // difficulty range and the *other* axis are applied. This stops contradictory
+  // picks like "Easy" + IMO, or "Primary" + IMO, which would match nothing.
+  const availableCategories = useMemo(
+    () => availableLevelsFor(pool, filterConfig, "category"),
+    [pool, filterConfig],
+  );
+  const availableCompetitions = useMemo(
+    () => availableLevelsFor(pool, filterConfig, "competition"),
+    [pool, filterConfig],
+  );
 
   useEffect(() => {
-    setLevels((list) => {
-      const next = list.filter((level) => availableLevels.has(level));
+    setCategories((list) => {
+      const next = list.filter((level) => availableCategories.has(level));
       return next.length === list.length ? list : next;
     });
-  }, [availableLevels]);
+  }, [availableCategories]);
+
+  useEffect(() => {
+    setCompetitions((list) => {
+      const next = list.filter((level) => availableCompetitions.has(level));
+      return next.length === list.length ? list : next;
+    });
+  }, [availableCompetitions]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
@@ -114,8 +135,8 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal/65">
           {lang === "bn"
-            ? "বিষয়, স্তর ও কঠিনতা বেছে নাও — সিস্টেম এলোমেলোভাবে সমস্যা বাছাই করে একটি মক পরীক্ষা তৈরি করবে, জমা দিলে সাথে সাথে উত্তর যাচাই হবে।"
-            : "Pick topics, levels and difficulty — we'll assemble a random mock exam and auto-grade your answers the moment you submit."}
+            ? "বিষয়, শ্রেণি, প্রতিযোগিতা ও কঠিনতা বেছে নাও — সিস্টেম এলোমেলোভাবে সমস্যা বাছাই করে একটি মক পরীক্ষা তৈরি করবে, জমা দিলে সাথে সাথে উত্তর যাচাই হবে।"
+            : "Pick topics, category, competition and difficulty — we'll assemble a random mock exam and auto-grade your answers the moment you submit."}
         </p>
       </div>
 
@@ -152,24 +173,46 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
           </div>
 
           <div>
-            <p className="field-label">{lang === "bn" ? "স্তর (একাধিক)" : "Levels (multi-select)"}</p>
+            <p className="field-label">{lang === "bn" ? "শ্রেণি (একাধিক)" : "Category (multi-select)"}</p>
             <div className="flex flex-wrap gap-2">
-              {PROBLEM_LEVELS.map((lv) => (
+              {PROBLEM_CATEGORIES.map((lv) => (
                 <Toggle
                   key={lv.value}
                   small
-                  active={levels.includes(lv.value)}
-                  disabled={!availableLevels.has(lv.value)}
+                  active={categories.includes(lv.value)}
+                  disabled={!availableCategories.has(lv.value)}
                   tint="#1B4594"
-                  onClick={() => setLevels((list) => (list.includes(lv.value) ? list.filter((v) => v !== lv.value) : [...list, lv.value]))}
+                  onClick={() => setCategories((list) => (list.includes(lv.value) ? list.filter((v) => v !== lv.value) : [...list, lv.value]))}
                   label={lang === "bn" ? lv.bn : lv.en}
                 />
               ))}
             </div>
             <p className="mt-2 text-xs text-brand-charcoal/45">
               {lang === "bn"
-                ? "নির্বাচিত কঠিনতার সাথে মেলে না এমন স্তর নিষ্ক্রিয় থাকে — যেমন সহজ কঠিনতায় IMO নয়।"
-                : "Levels that don't match the chosen difficulty are disabled — e.g. no IMO under Easy."}
+                ? "সমস্যাটি কোন শ্রেণির শিক্ষার্থীর জন্য — যেমন প্রাথমিক, জুনিয়র।"
+                : "Who the problem is for — e.g. Primary, Junior."}
+            </p>
+          </div>
+
+          <div>
+            <p className="field-label">{lang === "bn" ? "প্রতিযোগিতা (একাধিক)" : "Competition (multi-select)"}</p>
+            <div className="flex flex-wrap gap-2">
+              {PROBLEM_COMPETITIONS.map((lv) => (
+                <Toggle
+                  key={lv.value}
+                  small
+                  active={competitions.includes(lv.value)}
+                  disabled={!availableCompetitions.has(lv.value)}
+                  tint="#7952B3"
+                  onClick={() => setCompetitions((list) => (list.includes(lv.value) ? list.filter((v) => v !== lv.value) : [...list, lv.value]))}
+                  label={lang === "bn" ? lv.bn : lv.en}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-brand-charcoal/45">
+              {lang === "bn"
+                ? "সমস্যাটি কোন প্রতিযোগিতার — যেমন BdMO আঞ্চলিক। শ্রেণি ও প্রতিযোগিতা একসাথে বাছলে দুটোই মেলাতে হয় (যেমন BdMO আঞ্চলিক + প্রাথমিক)।"
+                : "Where the problem came from — e.g. BdMO Regional. Picking a category and a competition requires both to match (e.g. BdMO Regional + Primary)."}
             </p>
           </div>
 
