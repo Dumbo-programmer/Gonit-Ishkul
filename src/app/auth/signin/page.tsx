@@ -1,19 +1,24 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { KeyRound, Mail, ShieldCheck } from "lucide-react";
+import { CheckCircle2, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
+import { homePathForRole } from "@/lib/rbac";
 import { PageLoader } from "@/components/PageLoader";
+import type { Role } from "@/lib/types";
 
 function SignInForm() {
   const params = useSearchParams();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const registered = params.get("registered") === "1";
+  const callbackUrl = params.get("callbackUrl");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,10 +31,14 @@ function SignInForm() {
     });
     if (!res || res.error) {
       setLoading(false);
-      setError(t("common.login") + " ✕");
+      setError(lang === "bn" ? "ইমেইল বা পাসওয়ার্ড ভুল" : "Invalid email or password");
       return;
     }
-    const target = params.get("callbackUrl") ?? "/gonit-doot/dashboard";
+    let target = callbackUrl;
+    if (!target) {
+      const session = await getSession();
+      target = homePathForRole((session?.user as { role?: Role } | undefined)?.role);
+    }
     window.location.assign(target);
   }
 
@@ -48,6 +57,13 @@ function SignInForm() {
           </p>
         </div>
       </div>
+
+      {registered && (
+        <p className="mb-4 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <CheckCircle2 className="h-4 w-4" />
+          {lang === "bn" ? "অ্যাকাউন্ট তৈরি হয়েছে — এখন লগ ইন করুন।" : "Account created — please log in."}
+        </p>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
@@ -97,6 +113,16 @@ function SignInForm() {
           {loading ? t("common.loading") : t("common.login")}
         </button>
       </form>
+
+      <p className="mt-5 text-center text-sm text-brand-charcoal/70">
+        {lang === "bn" ? "নতুন ব্যবহারকারী? " : "New here? "}
+        <Link
+          href={`/auth/signup${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+          className="font-semibold text-brand-orange hover:underline"
+        >
+          {lang === "bn" ? "অ্যাকাউন্ট খুলুন" : "Create an account"}
+        </Link>
+      </p>
     </div>
   );
 }

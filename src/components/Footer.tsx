@@ -6,7 +6,7 @@ import { Facebook, Globe, Mail, MapPin, Phone } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 
 export function SiteFooter() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   return (
     <footer className="relative mt-20 overflow-hidden bg-brand-blue text-white">
@@ -33,6 +33,11 @@ export function SiteFooter() {
             {t("footer.quickLinks")}
           </h3>
           <ul className="space-y-2 text-sm text-white/85">
+            <li>
+              <Link href="/about" className="hover:text-brand-orange">
+                {lang === "bn" ? "আমাদের সম্পর্কে" : "About Us"}
+              </Link>
+            </li>
             <li>
               <Link href="/gonit-doot" className="hover:text-brand-orange">
                 {t("common.ambassador")}

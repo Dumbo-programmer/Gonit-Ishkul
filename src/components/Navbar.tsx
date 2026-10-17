@@ -5,16 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { LogIn, LayoutDashboard, LogOut, Menu, X, ShieldCheck, UserRound } from "lucide-react";
+import { LogIn, LayoutDashboard, LogOut, Menu, X, ShieldCheck, UserPlus, UserRound } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { LangToggle } from "./LangToggle";
+import { can, homePathForRole, ROLE_LABELS } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
+import type { Role } from "@/lib/types";
 
 export function SiteNavbar() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const role = (session?.user as { role?: Role } | undefined)?.role;
+  const home = homePathForRole(role);
 
   const links = [
     { href: "/", key: "common.home" },
@@ -79,17 +83,24 @@ export function SiteNavbar() {
           <LangToggle />
           {status === "authenticated" ? (
             <div className="flex items-center gap-2">
-              {(session.user as { role?: string }).role === "ADMIN" && (
+              {role && (
+                <span className="badge hidden bg-brand-lavender/15 text-[11px] text-brand-charcoal/70 xl:inline-flex">
+                  {ROLE_LABELS[role][lang]}
+                </span>
+              )}
+              {role && can(role, "metrics.view") && (
                 <Link href="/admin" className="btn-ghost !px-3 !py-2" title={t("common.admin")}>
                   <ShieldCheck className="h-4 w-4" />
                 </Link>
               )}
-              <Link href="/account" className="btn-ghost !px-3 !py-2" title={t("common.account")}>
-                <UserRound className="h-4 w-4" />
-              </Link>
-              <Link href="/gonit-doot/dashboard" className="btn-secondary !px-4 !py-2">
+              {role !== "STUDENT" && (
+                <Link href="/account" className="btn-ghost !px-3 !py-2" title={t("common.account")}>
+                  <UserRound className="h-4 w-4" />
+                </Link>
+              )}
+              <Link href={home} className="btn-secondary !px-4 !py-2">
                 <LayoutDashboard className="h-4 w-4" />
-                {t("common.dashboard")}
+                {role === "STUDENT" ? t("common.account") : t("common.dashboard")}
               </Link>
               <button
                 type="button"
@@ -101,10 +112,16 @@ export function SiteNavbar() {
               </button>
             </div>
           ) : (
-            <Link href="/auth/signin" className="btn-primary !px-5 !py-2">
-              <LogIn className="h-4 w-4" />
-              {t("common.login")}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/auth/signup" className="btn-ghost !px-4 !py-2">
+                <UserPlus className="h-4 w-4" />
+                {t("common.signup")}
+              </Link>
+              <Link href="/auth/signin" className="btn-primary !px-5 !py-2">
+                <LogIn className="h-4 w-4" />
+                {t("common.login")}
+              </Link>
+            </div>
           )}
         </div>
 
@@ -141,22 +158,29 @@ export function SiteNavbar() {
             <LangToggle />
             {status === "authenticated" ? (
               <div className="flex items-center gap-2">
-                {(session.user as { role?: string }).role === "ADMIN" && (
+                {role && can(role, "metrics.view") && (
                   <Link href="/admin" className="btn-ghost !px-4 !py-2">
                     {t("common.admin")}
                   </Link>
                 )}
-                <Link href="/account" className="btn-ghost !px-4 !py-2">
-                  {t("common.account")}
-                </Link>
-                <Link href="/gonit-doot/dashboard" className="btn-secondary !px-4 !py-2">
-                  {t("common.dashboard")}
+                {role !== "STUDENT" && (
+                  <Link href="/account" className="btn-ghost !px-4 !py-2">
+                    {t("common.account")}
+                  </Link>
+                )}
+                <Link href={home} className="btn-secondary !px-4 !py-2">
+                  {role === "STUDENT" ? t("common.account") : t("common.dashboard")}
                 </Link>
               </div>
             ) : (
-              <Link href="/auth/signin" className="btn-primary !px-4 !py-2">
-                {t("common.login")}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href="/auth/signup" className="btn-ghost !px-4 !py-2">
+                  {t("common.signup")}
+                </Link>
+                <Link href="/auth/signin" className="btn-primary !px-4 !py-2">
+                  {t("common.login")}
+                </Link>
+              </div>
             )}
           </div>
         </div>

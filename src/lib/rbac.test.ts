@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { can, ROLE_PERMISSIONS } from "@/lib/rbac";
+import { can, homePathForRole, ROLE_HOME, ROLE_LABELS, ROLE_PERMISSIONS } from "@/lib/rbac";
+import type { Role } from "@/lib/types";
 
 describe("RBAC permission matrix", () => {
   it("grants admins every permission", () => {
@@ -30,6 +31,29 @@ describe("RBAC permission matrix", () => {
   it("defines a permission list for every role", () => {
     for (const perms of Object.values(ROLE_PERMISSIONS)) {
       expect(Array.isArray(perms)).toBe(true);
+    }
+  });
+});
+
+describe("homePathForRole", () => {
+  it("sends each role to its dashboard", () => {
+    expect(homePathForRole("ADMIN")).toBe("/admin");
+    expect(homePathForRole("MENTOR")).toBe("/admin");
+    expect(homePathForRole("INSTRUCTOR")).toBe("/admin/courses");
+    expect(homePathForRole("AMBASSADOR")).toBe("/gonit-doot/dashboard");
+    expect(homePathForRole("CLUB")).toBe("/clubs/dashboard");
+    expect(homePathForRole("STUDENT")).toBe("/account");
+  });
+
+  it("falls back to /account for an unknown role and / for none", () => {
+    expect(homePathForRole("WAT" as Role)).toBe("/account");
+    expect(homePathForRole(null)).toBe("/");
+    expect(homePathForRole(undefined)).toBe("/");
+  });
+
+  it("has a home path for every role", () => {
+    for (const role of Object.keys(ROLE_PERMISSIONS) as Role[]) {
+      expect(homePathForRole(role)).toMatch(/^\//);
     }
   });
 });

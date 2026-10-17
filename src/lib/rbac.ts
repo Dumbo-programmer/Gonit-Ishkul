@@ -80,7 +80,24 @@ export const ROLE_LABELS: Record<Role, { bn: string; en: string }> = {
   ADMIN: { bn: "অ্যাডমিন", en: "Admin" },
   INSTRUCTOR: { bn: "কোর্স ইন্সট্রাক্টর", en: "Instructor" },
   MENTOR: { bn: "মেন্টর / মূল্যায়নকারী", en: "Mentor" },
-  AMBASSADOR: { bn: "গণিত দূত", en: "Ambassador" },
+  AMBASSADOR: { bn: "গণিত দূত", en: "Campus Ambassador" },
   CLUB: { bn: "ক্লাব প্রতিনিধি", en: "Club Representative" },
-  STUDENT: { bn: "শিক্ষার্থী", en: "Student" },
+  STUDENT: { bn: "ব্যবহারকারী", en: "User" },
 };
+
+// Where each role lands after signing in / clicking the primary CTA. Kept in
+// sync with the access guards on those pages so a redirect never dead-ends on a
+// page the user cannot open.
+export const ROLE_HOME: Record<Role, string> = {
+  ADMIN: "/admin",
+  MENTOR: "/admin",
+  INSTRUCTOR: "/admin/courses",
+  AMBASSADOR: "/gonit-doot/dashboard",
+  CLUB: "/clubs/dashboard",
+  STUDENT: "/account",
+};
+
+export function homePathForRole(role: Role | null | undefined): string {
+  if (!role) return "/";
+  return ROLE_HOME[role] ?? "/account";
+}

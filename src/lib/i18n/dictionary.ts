@@ -15,6 +15,7 @@ export const translations = {
     events: { bn: "ইভেন্ট", en: "Events" },
     community: { bn: "কমিউনিটি", en: "Community" },
     login: { bn: "লগ ইন", en: "Log in" },
+    signup: { bn: "নতুন অ্যাকাউন্ট", en: "Sign up" },
     logout: { bn: "লগ আউট", en: "Log out" },
     dashboard: { bn: "ড্যাশবোর্ড", en: "Dashboard" },
     loading: { bn: "লোড হচ্ছে…", en: "Loading…" },

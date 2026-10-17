@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
@@ -11,8 +12,13 @@ import {
   resolveActivity,
   updateApplicationStatus,
 } from "@/lib/repositories/ambassador";
-import { findUserByEmail, createUser } from "@/lib/repositories/users";
-import type { ActivityType } from "@/lib/types";
+import {
+  findUserByEmail,
+  findUserById,
+  createUser,
+  updateUserRole,
+} from "@/lib/repositories/users";
+import type { ActivityType, ApplicationRecord } from "@/lib/types";
 import type { FormState } from "@/lib/ambassadorForm";
 
 const applicationSchema = z.object({
@@ -58,12 +64,16 @@ export async function submitApplication(
     };
   }
 
-  const application = await createApplication({
-    ...parsed.data,
-    studentId: parsed.data.studentId || undefined,
-    resumeUrl: parsed.data.resumeUrl || undefined,
-    shareUrl: parsed.data.shareUrl || undefined,
-  });
+  const session = await getServerSession(authOptions);
+  const application = await createApplication(
+    {
+      ...parsed.data,
+      studentId: parsed.data.studentId || undefined,
+      resumeUrl: parsed.data.resumeUrl || undefined,
+      shareUrl: parsed.data.shareUrl || undefined,
+    },
+    session?.user?.uid ?? null,
+  );
 
   revalidatePath("/gonit-doot/status");
   return {
@@ -151,13 +161,33 @@ export async function reviewApplicationAction(formData: FormData): Promise<void>
     | "REJECTED";
   const note = String(formData.get("note") ?? "") || undefined;
   if (!id || !status) return;
-  await updateApplicationStatus(id, status, note);
+  const updated = await updateApplicationStatus(id, status, note);
+  if (updated && updated.status === "ACCEPTED") {
+    await promoteApplicantToAmbassador(updated);
+  }
   revalidatePath("/gonit-doot/review");
   revalidatePath("/gonit-doot/status");
 }
 
-/** Ensures a Student user exists for a submitted application (kept for later phases). */
-export async function ensureApplicantUser(email: string, name: string) {
-  if ((await findUserByEmail(email))) return;
-  await createUser({ name, email, password: "ChangeMe@12345", role: "STUDENT" });
+/**
+ * Promotes the account behind an accepted application to `AMBASSADOR`. When no
+ * account exists yet, one is created with a random temporary password; the
+ * applicant should sign up first so their existing account is promoted instead.
+ */
+async function promoteApplicantToAmbassador(application: ApplicationRecord): Promise<void> {
+  const existing =
+    (application.userId ? await findUserById(application.userId) : undefined) ??
+    (await findUserByEmail(application.email));
+
+  if (existing) {
+    if (existing.role !== "ADMIN") await updateUserRole(existing.id, "AMBASSADOR");
+    return;
+  }
+
+  await createUser({
+    name: application.fullName,
+    email: application.email,
+    password: `Doot-${randomBytes(6).toString("base64url")}`,
+    role: "AMBASSADOR",
+  });
 }
