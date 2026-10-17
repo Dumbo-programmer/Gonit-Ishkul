@@ -7,11 +7,9 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import {
-  createClub,
   createClubEntry,
   deleteClubEntry,
   getClubById,
-  getClubByRepresentative,
   updateClub,
   updateClubEntry,
   type ClubEntryInput,
@@ -129,28 +127,6 @@ function parseEntry(formData: FormData): { data?: ClubEntryInput; errors?: Recor
         .filter(Boolean),
     },
   };
-}
-
-export async function registerClubAction(
-  _prev: ClubFormState,
-  formData: FormData,
-): Promise<ClubFormState> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) redirect("/auth/signin?callbackUrl=/clubs/register");
-  if (!can(session.user.role, "club.register")) {
-    return { ok: false, message: "আপনার ক্লাব নিবন্ধনের অনুমতি নেই।" };
-  }
-  if (await getClubByRepresentative(session.user.uid)) {
-    return { ok: false, message: "আপনি ইতিমধ্যে একটি ক্লাবের প্রতিনিধি।" };
-  }
-
-  const { data, errors } = parseClub(formData);
-  if (!data || errors) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors };
-
-  await createClub(data, { id: session.user.uid, name: session.user.name ?? "প্রতিনিধি" });
-  revalidatePath("/clubs");
-  revalidatePath("/admin");
-  redirect("/clubs/dashboard?registered=1");
 }
 
 export async function updateClubProfileAction(

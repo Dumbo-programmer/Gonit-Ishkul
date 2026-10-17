@@ -13,7 +13,6 @@ export type Permission =
   | "articles.submit"
   | "articles.review"
   | "ambassadors.manage"
-  | "club.register"
   | "club.manage"
   | "clubs.review"
   | "metrics.view"
@@ -27,7 +26,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "ambassador.viewStatus",
     "ambassador.viewLeaderboard",
     "articles.submit",
-    "club.register",
   ],
   AMBASSADOR: [
     "ambassador.viewStatus",
@@ -35,7 +33,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "ambassador.downloadKit",
     "ambassador.viewLeaderboard",
     "articles.submit",
-    "club.register",
   ],
   CLUB: [
     "club.manage",

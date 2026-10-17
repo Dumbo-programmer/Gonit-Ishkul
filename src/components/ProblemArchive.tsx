@@ -140,7 +140,7 @@ export function ProblemArchive({ problems }: { problems: ProblemArchiveItem[] })
                 <span className="rounded-full bg-brand-lavender/15 px-2.5 py-1">
                   {"▲".repeat(Math.max(1, Math.min(5, p.difficulty)))}
                 </span>
-                <span>{difficultyLabel(p.difficulty)}</span>
+                <span>{difficultyLabel(p.difficulty, lang)}</span>
                 {p.kind === "PROOF" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-brand-red/10 px-2.5 py-1 text-brand-red">
                     <Target className="h-3 w-3" />

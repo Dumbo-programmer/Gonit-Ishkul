@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { MathContent } from "@/components/MathContent";
+import { Spinner } from "@/components/PageLoader";
 import { difficultyLabel, topicMeta } from "@/lib/arena";
 import {
   savePracticeAnswerAction,
@@ -55,10 +56,32 @@ function SubmitTestButton() {
   const { pending } = useFormStatus();
   const { lang } = useLang();
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      <Send className="h-4 w-4" />
-      {pending ? "…" : lang === "bn" ? "জমা দাও" : "Submit"}
+    <button type="submit" disabled={pending} className="btn-primary disabled:opacity-70">
+      {pending ? <Spinner className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+      {pending
+        ? lang === "bn"
+          ? "জমা হচ্ছে ও যাচাই হচ্ছে…"
+          : "Submitting & grading…"
+        : lang === "bn"
+          ? "জমা দাও"
+          : "Submit"}
     </button>
+  );
+}
+
+function SubmitOverlay() {
+  const { pending } = useFormStatus();
+  const { lang } = useLang();
+  if (!pending) return null;
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-brand-charcoal/30 backdrop-blur-sm">
+      <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-glow">
+        <Spinner className="h-5 w-5" />
+        <span className="text-sm font-bold text-brand-charcoal">
+          {lang === "bn" ? "জমা হচ্ছে ও যাচাই হচ্ছে…" : "Submitting & grading…"}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -87,6 +110,7 @@ export function PracticeRunner({ test, problems }: { test: PracticeRunnerTest; p
   const submitted = Boolean(test.submittedAt);
   const [answers, setAnswers] = useState<Record<string, string>>(test.answers ?? {});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const answersRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const autoSubmitted = useRef(false);
@@ -124,8 +148,14 @@ export function PracticeRunner({ test, problems }: { test: PracticeRunnerTest; p
 
   async function persist(problemId: string, value: string) {
     setSavingId(problemId);
+    setSavedId(null);
     try {
       await savePracticeAnswerAction(test.id, problemId, value);
+      setSavedId(problemId);
+      window.setTimeout(
+        () => setSavedId((current) => (current === problemId ? null : current)),
+        1500,
+      );
     } finally {
       setSavingId(null);
     }
@@ -268,7 +298,7 @@ export function PracticeRunner({ test, problems }: { test: PracticeRunnerTest; p
                     {lang === "bn" ? tm.bn : tm.en}
                   </span>
                   <span className="text-xs font-semibold text-brand-charcoal/45">
-                    ▲ {difficultyLabel(p.difficulty)}
+                    ▲ {difficultyLabel(p.difficulty, lang)}
                   </span>
                   <span className="ml-auto text-xs font-bold text-brand-charcoal/40">#{i + 1}</span>
                 </div>
@@ -281,7 +311,18 @@ export function PracticeRunner({ test, problems }: { test: PracticeRunnerTest; p
                 <label className="mt-3 block">
                   <span className="field-label">
                     {lang === "bn" ? "তোমার উত্তর" : "Your answer"}
-                    {savingId === p.id && <span className="ml-2 text-xs text-brand-charcoal/40">…</span>}
+                    {savingId === p.id && (
+                      <span className="ml-2 inline-flex items-center gap-1 align-middle text-xs font-semibold text-brand-purple">
+                        <Spinner className="h-3 w-3" />
+                        {lang === "bn" ? "সংরক্ষণ হচ্ছে…" : "Saving…"}
+                      </span>
+                    )}
+                    {savingId !== p.id && savedId === p.id && (
+                      <span className="ml-2 inline-flex items-center gap-1 align-middle text-xs font-semibold text-emerald-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {lang === "bn" ? "সংরক্ষিত" : "Saved"}
+                      </span>
+                    )}
                   </span>
                   <input
                     className="field-input"
@@ -306,6 +347,7 @@ export function PracticeRunner({ test, problems }: { test: PracticeRunnerTest; p
           </p>
           <SubmitTestButton />
         </div>
+        <SubmitOverlay />
       </form>
     </div>
   );

@@ -42,6 +42,13 @@ const PILLARS = [
   },
 ];
 
+const TEAM = [
+  { name: "Sayem Sadat", role: "Position", tint: "#FF781E" },
+  { name: "Siratim Mustakim", role: "Position", tint: "#1B4594" },
+  { name: "Tawhid Bin Omar", role: "Position", tint: "#7952B3" },
+  { name: "Name", role: "Advisor", tint: "#9E80D2" },
+];
+
 export default function AboutPage() {
   const { lang } = useLang();
   const bn = lang === "bn";
@@ -104,6 +111,34 @@ export default function AboutPage() {
             </p>
           </section>
         </div>
+
+        <section className="mt-14">
+          <h2 className="text-center text-2xl font-black text-brand-charcoal">
+            {bn ? "আমাদের টিম" : "Our team"}
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-brand-charcoal/65">
+            {bn
+              ? "গণিত ইশকুলের পেছনে যারা দিন-রাত কাজ করছেন।"
+              : "The people working behind the scenes to make Gonit Ishkul happen."}
+          </p>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {TEAM.map((member) => (
+              <div key={member.name} className="card flex items-center gap-4">
+                <span
+                  className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-lg font-black text-white"
+                  style={{ backgroundColor: member.tint }}
+                  aria-hidden
+                >
+                  {member.name.charAt(0)}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-brand-charcoal">{member.name}</h3>
+                  <p className="text-sm text-brand-charcoal/65">{member.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="mt-14">
           <h2 className="text-center text-2xl font-black text-brand-charcoal">

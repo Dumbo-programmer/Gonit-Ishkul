@@ -10,7 +10,6 @@ import {
   NotebookPen,
   PlusCircle,
   Trash2,
-  UserPlus,
 } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/rbac";
@@ -49,14 +48,9 @@ export default async function ClubDashboardPage() {
           <p className="mx-auto mt-3 max-w-xl text-brand-charcoal/65">
             {isAdmin
               ? "তুমি অ্যাডমিন — সব ক্লাব পরিচালনা করতে পারবে অ্যাডমিন প্যানেল থেকে।"
-              : "তোমার নামে এখনো কোনো ক্লাব নিবন্ধিত নেই। ক্লাব নিবন্ধন করে কনটেন্ট জমা দেওয়া শুরু করো।"}
+              : "তোমার নামে এখনো কোনো ক্লাব নিবন্ধিত নেই। ক্লাব প্রতিনিধি অ্যাকাউন্ট প্রশাসনিকভাবে তৈরি ও প্রদান করা হয় — অ্যাডমিন টিমের সাথে যোগাযোগ করো।"}
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            {!isAdmin && (
-              <Link href="/clubs/register" className="btn-primary">
-                <UserPlus className="h-4 w-4" /> ক্লাব নিবন্ধন করো
-              </Link>
-            )}
             <Link href="/admin/clubs" className="btn-ghost">
               ক্লাব ব্যবস্থাপনা
             </Link>

@@ -20,6 +20,7 @@ import { clubStatusMeta } from "@/lib/clubs";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { reviewClubAction } from "@/app/admin/clubs/actions";
 import { ClubEntryModeration } from "@/components/ClubEntryModeration";
+import { AdminCreateClubForm } from "@/components/AdminCreateClubForm";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,22 @@ export default async function AdminClubsPage() {
           </div>
         ))}
       </div>
+
+      <section className="mt-14">
+        <h2 className="font-display text-xl font-bold text-brand-blue">নতুন ক্লাব ও প্রতিনিধি</h2>
+        <p className="mt-1 text-sm text-brand-charcoal/60">
+          ক্লাব প্রতিনিধির অ্যাকাউন্ট প্রশাসনিকভাবে তৈরি হয়। নতুন ক্লাব যোগ করে এর প্রতিনিধির লগইন
+          শংসাপত্র নির্ধারণ করুন — ক্লাবটি সাথে সাথেই অনুমোদিত ও প্রকাশিত হবে।
+        </p>
+        <details className="mt-5">
+          <summary className="btn-primary w-fit cursor-pointer">
+            <Building2 className="h-4 w-4" /> নতুন ক্লাব তৈরি করো
+          </summary>
+          <div className="mt-5">
+            <AdminCreateClubForm />
+          </div>
+        </details>
+      </section>
 
       <section className="mt-14">
         <h2 className="font-display text-xl font-bold text-brand-blue">

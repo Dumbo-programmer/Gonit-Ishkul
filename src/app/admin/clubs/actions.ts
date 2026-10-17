@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
+import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import {
+  createClub,
   deleteClub,
   deleteClubEntry,
   getClubById,
@@ -14,8 +16,10 @@ import {
   reviewClubEntry,
   setClubPublished,
   type ClubEntryInput,
+  type ClubInput,
 } from "@/lib/repositories/clubs";
-import { updateUserRole } from "@/lib/repositories/users";
+import { createUser, findUserByEmail, updateUserRole } from "@/lib/repositories/users";
+import type { ClubFormState } from "@/lib/clubForm";
 import type {
   ClubEntryType,
   ClubStatus,
@@ -41,6 +45,75 @@ function revalidateClub(slug?: string) {
 }
 
 const CLUB_DECISIONS: ClubStatus[] = ["APPROVED", "REJECTED", "SUSPENDED"];
+
+const optionalUrl = z.string().trim().url("সঠিক লিংক দিন").optional().or(z.literal(""));
+const optionalYear = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+  z.number().int().min(1900).max(2100).optional(),
+);
+
+const adminClubSchema = z.object({
+  name: z.string().trim().min(2, "ক্লাবের ইংরেজি নাম দিন"),
+  nameBn: z.string().trim().min(2, "ক্লাবের বাংলা নাম দিন"),
+  institution: z.string().trim().min(2, "প্রতিষ্ঠানের নাম দিন"),
+  district: z.string().trim().min(2, "জেলা নির্বাচন করুন"),
+  about: z.string().trim().min(30, "পরিচিতি অন্তত ৩০ অক্ষরের হতে হবে"),
+  aboutEn: z.string().trim().optional().or(z.literal("")),
+  foundedYear: optionalYear,
+  logoUrl: optionalUrl,
+  website: optionalUrl,
+  facebook: optionalUrl,
+  contactEmail: z.string().trim().email("সঠিক ইমেইল দিন"),
+  contactPhone: z.string().trim().optional().or(z.literal("")),
+  repName: z.string().trim().min(2, "প্রতিনিধির নাম দিন"),
+  repEmail: z.string().trim().email("প্রতিনিধির সঠিক ইমেইল দিন"),
+  repPassword: z.string().min(6, "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে"),
+});
+
+function zodFieldErrors(error: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  for (const issue of error.issues) errors[String(issue.path[0])] = issue.message;
+  return errors;
+}
+
+export async function createClubWithRepAction(
+  _prev: ClubFormState,
+  formData: FormData,
+): Promise<ClubFormState> {
+  await requireAdmin();
+  const parsed = adminClubSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { ok: false, message: "ফর্মে ত্রুটি আছে", errors: zodFieldErrors(parsed.error) };
+
+  const d = parsed.data;
+  if (await findUserByEmail(d.repEmail)) {
+    return { ok: false, message: "এই ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট আছে।", errors: { repEmail: "already registered" } };
+  }
+
+  const rep = await createUser({ name: d.repName, email: d.repEmail, password: d.repPassword, role: "CLUB" });
+  const club = await createClub(
+    {
+      name: d.name,
+      nameBn: d.nameBn,
+      logoUrl: d.logoUrl || undefined,
+      about: d.about,
+      aboutEn: d.aboutEn || undefined,
+      district: d.district,
+      institution: d.institution,
+      foundedYear: d.foundedYear,
+      website: d.website || undefined,
+      facebook: d.facebook || undefined,
+      contactEmail: d.contactEmail,
+      contactPhone: d.contactPhone || undefined,
+    } satisfies ClubInput,
+    { id: rep.id, name: rep.name },
+  );
+  await reviewClub(club.id, "APPROVED");
+  revalidateClub(club.slug);
+  return {
+    ok: true,
+    message: `ক্লাব “${club.nameBn}” তৈরি ও প্রকাশিত হয়েছে। প্রতিনিধি ${rep.email} দিয়ে লগইন করতে পারবেন।`,
+  };
+}
 
 export async function reviewClubAction(formData: FormData): Promise<void> {
   await requireAdmin();

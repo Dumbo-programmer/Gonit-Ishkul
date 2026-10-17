@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { Building2, LayoutDashboard, UserPlus } from "lucide-react";
+import { Building2, LayoutDashboard } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import {
   clubEntryCounts,
@@ -33,19 +33,26 @@ export default async function ClubsPage() {
           প্রতিটি ক্লাবের প্রতিনিধি নিজের কনটেন্ট জমা দেন; অ্যাডমিন অনুমোদনের পর তা সর্বজনীন হয়।
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           {myClub ? (
-            <Link href="/clubs/dashboard" className="btn-primary">
-              <LayoutDashboard className="h-4 w-4" /> আমার ক্লাব ড্যাশবোর্ড
-            </Link>
+            <>
+              <Link href="/clubs/dashboard" className="btn-primary">
+                <LayoutDashboard className="h-4 w-4" /> আমার ক্লাব ড্যাশবোর্ড
+              </Link>
+              <Link href={`/clubs/${myClub.slug}`} className="btn-ghost">
+                <Building2 className="h-4 w-4" /> আমার ক্লাবের পাতা
+              </Link>
+            </>
           ) : (
-            <Link href="/clubs/register" className="btn-primary">
-              <UserPlus className="h-4 w-4" /> তোমার ক্লাব নিবন্ধন করো
-            </Link>
+            <>
+              <Link href="/clubs/dashboard" className="btn-secondary">
+                <LayoutDashboard className="h-4 w-4" /> প্রতিনিধি ড্যাশবোর্ড
+              </Link>
+              <p className="text-xs text-brand-charcoal/55">
+                ক্লাব প্রতিনিধি অ্যাকাউন্ট প্রশাসনিকভাবে তৈরি ও প্রদান করা হয় — নিবন্ধনের জন্য অ্যাডমিন টিমের সাথে যোগাযোগ করো।
+              </p>
+            </>
           )}
-          <Link href="/clubs/dashboard" className="btn-ghost">
-            <LayoutDashboard className="h-4 w-4" /> প্রতিনিধি ড্যাশবোর্ড
-          </Link>
         </div>
 
         {clubs.length === 0 ? (

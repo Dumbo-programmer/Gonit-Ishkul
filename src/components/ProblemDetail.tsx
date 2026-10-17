@@ -63,7 +63,7 @@ export function ProblemDetail({ problem, loggedIn, submission, showSolution }: P
             {lang === "bn" ? levelLabel(problem.levels[0]).bn : levelLabel(problem.levels[0]).en}
           </span>
           <span className="badge bg-brand-lavender/15 text-brand-charcoal/70">
-            {difficultyLabel(problem.difficulty)}
+            {difficultyLabel(problem.difficulty, lang)}
           </span>
           <span className="badge bg-brand-orange/10 text-brand-orange">
             +{problem.basePoints} {t("arena.points")}

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { History, ListChecks, Play, Sparkles, Timer, Trash2 } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
+import { Spinner } from "@/components/PageLoader";
 import { PROBLEM_LEVELS, PROBLEM_TOPICS, difficultyLabel } from "@/lib/arena";
 import {
   PRACTICE_DURATIONS,
@@ -39,9 +40,29 @@ function StartButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   const { lang } = useLang();
   return (
-    <button type="submit" disabled={pending || disabled} className="btn-primary disabled:opacity-50">
-      <Play className="h-4 w-4" />
-      {pending ? "…" : lang === "bn" ? "পরীক্ষা শুরু করো" : "Start test"}
+    <button type="submit" disabled={pending || disabled} className="btn-primary w-full disabled:opacity-50">
+      {pending ? <Spinner className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      {pending
+        ? lang === "bn"
+          ? "পরীক্ষা তৈরি হচ্ছে…"
+          : "Creating test…"
+        : lang === "bn"
+          ? "পরীক্ষা শুরু করো"
+          : "Start test"}
+    </button>
+  );
+}
+
+function DeleteButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="btn-ghost !px-3 !py-2 disabled:opacity-50"
+      aria-label="Delete"
+    >
+      {pending ? <Spinner className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
     </button>
   );
 }
@@ -60,6 +81,26 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
     () => countEligible(pool, { topics, levels, difficultyMin, difficultyMax }),
     [pool, topics, levels, difficultyMin, difficultyMax],
   );
+
+  // A level is only offerable if some problem at that level also falls inside the
+  // chosen difficulty range (and matches the selected topics). This stops
+  // contradictory picks like "Easy" + "IMO", which would otherwise match nothing.
+  const availableLevels = useMemo(() => {
+    const set = new Set<ProblemLevel>();
+    for (const problem of pool) {
+      if (topics.length > 0 && !topics.includes(problem.topic)) continue;
+      if (problem.difficulty < difficultyMin || problem.difficulty > difficultyMax) continue;
+      for (const level of problem.levels) set.add(level);
+    }
+    return set;
+  }, [pool, topics, difficultyMin, difficultyMax]);
+
+  useEffect(() => {
+    setLevels((list) => {
+      const next = list.filter((level) => availableLevels.has(level));
+      return next.length === list.length ? list : next;
+    });
+  }, [availableLevels]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
@@ -118,12 +159,18 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
                   key={lv.value}
                   small
                   active={levels.includes(lv.value)}
+                  disabled={!availableLevels.has(lv.value)}
                   tint="#1B4594"
                   onClick={() => setLevels((list) => (list.includes(lv.value) ? list.filter((v) => v !== lv.value) : [...list, lv.value]))}
                   label={lang === "bn" ? lv.bn : lv.en}
                 />
               ))}
             </div>
+            <p className="mt-2 text-xs text-brand-charcoal/45">
+              {lang === "bn"
+                ? "নির্বাচিত কঠিনতার সাথে মেলে না এমন স্তর নিষ্ক্রিয় থাকে — যেমন সহজ কঠিনতায় IMO নয়।"
+                : "Levels that don't match the chosen difficulty are disabled — e.g. no IMO under Easy."}
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -141,7 +188,7 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
               >
                 {[1, 2, 3, 4, 5].map((n) => (
                   <option key={n} value={n}>
-                    {difficultyLabel(n)} ({n})
+                    {difficultyLabel(n, lang)} ({n})
                   </option>
                 ))}
               </select>
@@ -156,7 +203,7 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
               >
                 {[1, 2, 3, 4, 5].map((d) => (
                   <option key={d} value={d}>
-                    {difficultyLabel(d)}
+                    {difficultyLabel(d, lang)}
                   </option>
                 ))}
               </select>
@@ -277,9 +324,7 @@ export function PracticeStart({ pool, history, error }: PracticeStartProps) {
                   </Link>
                   <form action={deletePracticeTestAction}>
                     <input type="hidden" name="testId" value={h.id} />
-                    <button type="submit" className="btn-ghost !px-3 !py-2" aria-label="Delete">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <DeleteButton />
                   </form>
                 </div>
               </div>
@@ -301,25 +346,31 @@ function Toggle({
   label,
   tint,
   small,
+  disabled,
 }: {
   active: boolean;
   onClick: () => void;
   label: string;
   tint: string;
   small?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
+      title={disabled ? label : undefined}
       className={`rounded-full border-2 font-bold transition ${
-        small ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
+        small ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm"
       } ${
-        active
-          ? "border-transparent text-white shadow-bubble"
-          : "border-brand-lavender/30 bg-white text-brand-charcoal/70 hover:border-brand-lavender/60"
+        disabled
+          ? "cursor-not-allowed border-brand-charcoal/10 text-brand-charcoal/25 line-through"
+          : `border-brand-lavender/40 ${
+              active ? "text-white" : "text-brand-charcoal/70 hover:border-brand-lavender"
+            }`
       }`}
-      style={active ? { backgroundColor: tint } : undefined}
+      style={!disabled && active ? { borderColor: tint, backgroundColor: tint } : undefined}
     >
       {label}
     </button>

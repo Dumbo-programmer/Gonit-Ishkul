@@ -47,9 +47,14 @@ export function levelLabel(level: ProblemLevel) {
   return PROBLEM_LEVELS.find((l) => l.value === level) ?? PROBLEM_LEVELS[1];
 }
 
-export function difficultyLabel(n: number) {
-  const labels = ["", "সহজ", "মধ্যম", "কঠিন", "খুব কঠিন", "অলিম্পিয়াড"];
-  return labels[Math.max(0, Math.min(5, Math.round(n)))] ?? "";
+const DIFFICULTY_LABELS: Record<"bn" | "en", string[]> = {
+  bn: ["", "সহজ", "মধ্যম", "কঠিন", "খুব কঠিন", "অলিম্পিয়াড"],
+  en: ["", "Easy", "Medium", "Hard", "Very Hard", "Olympiad"],
+};
+
+export function difficultyLabel(n: number, lang: "bn" | "en" = "bn") {
+  const index = Math.max(0, Math.min(5, Math.round(n)));
+  return DIFFICULTY_LABELS[lang][index] ?? "";
 }
 
 export type ContestPhase = "upcoming" | "live" | "ended";

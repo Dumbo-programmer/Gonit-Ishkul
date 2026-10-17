@@ -33,7 +33,6 @@ export const config = {
     "/gonit-doot/dashboard/:path*",
     "/gonit-doot/review/:path*",
     "/clubs/dashboard/:path*",
-    "/clubs/register/:path*",
     "/problems/practice/:path*",
     "/problems/grading/:path*",
   ],
